@@ -88,6 +88,16 @@ function shouldAppendNavigationHint(state = "") {
   if (isLeadState(state)) return false;
   if (state === "finalizado") return false;
 
+  const introStates = [
+    "amazon_p1",
+    "automatizacion_p1",
+    "ecommerce_p1",
+    "importacion_p1",
+    "atencion_p1"
+  ];
+
+  if (introStates.includes(state)) return false;
+
   const blockedFragments = [
     "reunion",
     "asesor",
@@ -152,11 +162,17 @@ function buildWelcomeMenu() {
 }
 
 function buildGreetingWelcomeMessage() {
-  return `Hola, soy Orby.\n\nEstoy aquí para orientarte de forma rápida y clara.\n\n${buildWelcomeMenu()}`;
+  return `Hola, soy Orby.
+
+Estoy aquí para orientarte de forma rápida y clara.
+
+${buildWelcomeMenu()}`;
 }
 
 function buildUnknownMessage() {
-  return `No logré identificar bien tu mensaje.\n\n${getMainMenu()}`;
+  return `No logré identificar bien tu mensaje.
+
+${getMainMenu()}`;
 }
 
 function isGreetingMessage(text = "") {
@@ -239,7 +255,9 @@ function handleGlobalCommands({ user, phone, rawMessage }) {
     resetUser(phone);
 
     return buildResponseWithNavigation(
-      `Perfecto. Empecemos de nuevo.\n\n${buildWelcomeMenu()}`,
+      `Perfecto. Empecemos de nuevo.
+
+${buildWelcomeMenu()}`,
       { source: "backend" },
       null
     );
