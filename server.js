@@ -45,6 +45,19 @@ app.get("/health", (req, res) => {
 // WEBHOOK PLACEHOLDER
 // ========================================================
 // Aquí luego conectaremos app.js
+app.get("/webhook", (req, res) => {
+  const mode = req.query["hub.mode"];
+  const token = req.query["hub.verify_token"];
+  const challenge = req.query["hub.challenge"];
+
+  const verifyToken = process.env.WHATSAPP_VERIFY_TOKEN;
+
+  if (mode === "subscribe" && token === verifyToken) {
+    return res.status(200).send(challenge);
+  }
+
+  return res.sendStatus(403);
+});
 app.post("/webhook", async (req, res) => {
   try {
     const result = await handleWebhookPayload(req.body);
