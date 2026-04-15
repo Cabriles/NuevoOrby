@@ -84,7 +84,7 @@ function isLeadState(state = "") {
 }
 
 function shouldAppendNavigationHint(state = "") {
-  if (!state) return true;
+  if (!state) return false;
   if (isLeadState(state)) return false;
   if (state === "finalizado") return false;
 
@@ -152,7 +152,7 @@ function buildWelcomeMenu() {
 }
 
 function buildGreetingWelcomeMessage() {
-  return `Hola, soy Orby.\n\nPerfecto. Estoy aquí para orientarte de forma rápida y clara.\n\n${buildWelcomeMenu()}`;
+  return `Hola, soy Orby.\n\nEstoy aquí para orientarte de forma rápida y clara.\n\n${buildWelcomeMenu()}`;
 }
 
 function buildUnknownMessage() {
