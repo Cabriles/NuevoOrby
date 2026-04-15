@@ -84,7 +84,7 @@ function isLeadState(state = "") {
 }
 
 function shouldAppendNavigationHint(state = "") {
-  if (!state) return true;
+  if (!state) return false;
   if (isLeadState(state)) return false;
   if (state === "finalizado") return false;
 
@@ -152,7 +152,7 @@ function buildWelcomeMenu() {
 }
 
 function buildGreetingWelcomeMessage() {
-  return `Hola, soy Orby.\n\nPerfecto. Estoy aquí para orientarte de forma rápida y clara.\n\n${buildWelcomeMenu()}`;
+  return `Hola, soy Orby.\n\nEstoy aquí para orientarte de forma rápida y clara.\n\n${buildWelcomeMenu()}`;
 }
 
 function buildUnknownMessage() {
@@ -435,24 +435,94 @@ async function processIncomingMessage({
 // WEBHOOK HELPER (opcional para server.js)
 // ========================================================
 async function handleWebhookPayload(payload = {}) {
-  const phone =
-    payload?.phone ||
-    payload?.from ||
-    payload?.sender ||
-    payload?.user_phone ||
-    null;
+  try {
+    // --------------------------------------------------------
+    // 1) Compatibilidad con payload simple de Thunder / pruebas manuales
+    // --------------------------------------------------------
+    const simplePhone =
+      payload?.phone ||
+      payload?.from ||
+      payload?.sender ||
+      payload?.user_phone ||
+      null;
 
-  const message =
-    payload?.message ||
-    payload?.text ||
-    payload?.body ||
-    payload?.incoming_message ||
-    "";
+    const simpleMessage =
+      payload?.message ||
+      payload?.text ||
+      payload?.body ||
+      payload?.incoming_message ||
+      "";
 
-  return processIncomingMessage({
-    phone,
-    message
-  });
+    if (simplePhone && String(simpleMessage || "").trim()) {
+      const result = await processIncomingMessage({
+        phone: simplePhone,
+        message: simpleMessage
+      });
+
+      return {
+        ...result,
+        to: simplePhone
+      };
+    }
+
+    // --------------------------------------------------------
+    // 2) Payload real de WhatsApp Cloud API (Meta)
+    // --------------------------------------------------------
+    const change = payload?.entry?.[0]?.changes?.[0];
+    const value = change?.value;
+    const incomingMessage = value?.messages?.[0];
+    const contact = value?.contacts?.[0];
+
+    if (!incomingMessage) {
+      return {
+        reply: null,
+        source: "meta_webhook_no_message_event",
+        to: null
+      };
+    }
+
+    const phone = incomingMessage?.from || contact?.wa_id || null;
+
+    let message = "";
+
+    if (incomingMessage?.type === "text") {
+      message = incomingMessage?.text?.body || "";
+    } else if (incomingMessage?.type === "button") {
+      message = incomingMessage?.button?.text || "";
+    } else if (incomingMessage?.type === "interactive") {
+      message =
+        incomingMessage?.interactive?.button_reply?.title ||
+        incomingMessage?.interactive?.list_reply?.title ||
+        "";
+    }
+
+    if (!phone || !String(message || "").trim()) {
+      return {
+        reply: null,
+        source: "meta_webhook_unsupported_event",
+        to: null
+      };
+    }
+
+    const result = await processIncomingMessage({
+      phone,
+      message
+    });
+
+    return {
+      ...result,
+      to: phone
+    };
+  } catch (error) {
+    console.error("Error en handleWebhookPayload:", error);
+
+    return {
+      reply: null,
+      source: "meta_webhook_error",
+      error: true,
+      to: null
+    };
+  }
 }
 
 // ========================================================
