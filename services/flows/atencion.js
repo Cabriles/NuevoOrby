@@ -92,10 +92,9 @@ function isLikelyDocument(text = "") {
 }
 
 function getStandardCTA() {
-  return `Si lo prefieres, puedo dejar tu caso listo para que un asesor lo revise contigo directamente.
+  return `Si deseas, puedo dejar tu caso listo ahora para que un asesor te contacte directamente por WhatsApp.
 
-1️⃣ Que me contacten por WhatsApp
-2️⃣ Quiero agendar una reunión`;
+1️⃣ Que me contacten por WhatsApp`;
 }
 
 function buildHybridReply(aiReply, withCTA = false) {
@@ -154,10 +153,10 @@ function buildSupportOpening(user) {
   }
 
   if (user.atencion_tipo_usuario === "escalado_directo") {
-    return `Entiendo. Ya tengo una idea inicial de tu caso y lo importante aquí es dejarlo ordenado para revisión.`;
+    return `Entiendo. Voy a ayudarte a dejar tu caso claro para que un asesor pueda revisarlo correctamente.`;
   }
 
-  return `Perfecto. Ya tengo una idea inicial de tu consulta y puedo orientarte de forma más clara desde este punto.`;
+  return `Entiendo. Voy a ayudarte a canalizar tu consulta de forma clara para que pueda revisarse correctamente.`;
 }
 
 function buildSupportFocus(user, userMessage = "") {
@@ -180,7 +179,7 @@ function buildSupportFocus(user, userMessage = "") {
   }
 
   if (user.atencion_tipo_usuario === "escalado_directo") {
-    return "Aquí conviene ordenar el motivo principal de tu solicitud para que la derivación al asesor llegue más clara y con mejor contexto.";
+    return "Puedo dejar tu solicitud lista ahora para que te contacten directamente por WhatsApp y den seguimiento a tu caso.";
   }
 
   if (msg.includes("ventas")) {
@@ -192,14 +191,14 @@ function buildSupportFocus(user, userMessage = "") {
   }
 
   if (msg.includes("servicio") || msg.includes("como funciona") || msg.includes("cómo funciona")) {
-    return "Aquí lo más útil es aclarar primero qué parte del servicio necesitas entender mejor para darte una respuesta más ordenada.";
+    return "Puedo ayudarte a dejar tu consulta lista ahora para que te contacten directamente por WhatsApp.";
   }
 
   if (msg.includes("soporte") || msg.includes("problema") || msg.includes("error")) {
-    return "Aquí conviene precisar mejor el problema principal para orientarte con más utilidad y, si hace falta, escalarlo correctamente.";
+    return "Puedo ayudarte a dejar tu caso listo ahora para que un asesor lo revise y te contacte directamente por WhatsApp.";
   }
 
-  return "Aquí lo importante es aterrizar mejor el punto principal de tu consulta para poder orientarte con más claridad y sin darte una respuesta genérica.";
+  return "Puedes dejar tu solicitud lista ahora y te contactamos directamente por WhatsApp.";
 }
 
 function buildFallbackReply(user, userMessage = "") {
@@ -216,12 +215,12 @@ ${focus} Voy a mantener la orientación en tono de continuidad y soporte, y si h
   if (user.atencion_tipo_usuario === "escalado_directo") {
     return `${opening}
 
-${focus} Si quieres, en este mismo paso puedo dejar tu solicitud lista para que un asesor la revise directamente contigo.`;
+${focus}`;
   }
 
   return `${opening}
 
-${focus} Si lo prefieres, en este mismo paso puedo dejar tu consulta lista para que un asesor la revise contigo directamente.`;
+${focus}`;
 }
 
 // ========================================================
@@ -238,12 +237,14 @@ function buildGeminiPrompt(user, userMessage = "") {
       : user.atencion_tipo_usuario === "escalado_directo"
         ? `TIPO DE ATENCIÓN
 - Es un caso de escalado directo.
-- Debes responder breve, ordenado y sin desarrollar demasiado.
-- El objetivo es dar una primera orientación útil antes de derivar.`
+- Debes responder breve, ordenado y profesional.
+- El objetivo es dar una primera orientación útil antes de derivar.
+- No ofrezcas reunión ni alternativas innecesarias.`
         : `TIPO DE ATENCIÓN
 - Es una consulta general.
 - Debes orientar con claridad, utilidad y tono profesional.
-- No suenes demasiado comercial ni demasiado técnico.`;
+- No suenes demasiado comercial ni demasiado técnico.
+- No ofrezcas reunión ni alternativas innecesarias.`;
 
   return `
 Eres Orby, asistente de atención de OneOrbix.
@@ -271,12 +272,13 @@ INSTRUCCIONES
 - Responde con sentido práctico, no con relleno.
 - Si es cliente validado, responde con continuidad y criterio de soporte.
 - Si es prospecto, responde con orientación clara y útil.
-- Si es escalado directo, responde de forma breve y ordenada.
+- Si es escalado directo, responde de forma breve, ordenada y profesional.
 - Evita frases vacías o genéricas.
 - No prometas acciones que no estén confirmadas.
 - No digas que visite la sección de contacto, que escriba por contacto, ni que use otra vía externa.
 - No menciones página web, formulario, sección de contacto ni canal alterno, porque el usuario ya está siendo atendido aquí.
-- Si corresponde escalar, limita tu respuesta a orientar brevemente y dejar natural el paso a revisión.
+- Si corresponde escalar, limita tu respuesta a orientar brevemente y dejar natural el paso a revisión por WhatsApp.
+- No ofrezcas agendar reunión en este módulo.
 - Máximo 2 párrafos o 5 bullets.
 - Debe sonar a atención real y bien llevada.
   `.trim();
@@ -597,28 +599,8 @@ ${phone}
           };
         }
 
-        if (cleanMessage === "2") {
-          user.estado = "atencion_reunion";
-
-          saveAndLog({
-            phone,
-            user,
-            saveUser,
-            eventType: "cta_meeting_selected",
-            detail: {
-              selected_option: "2",
-              tipo_usuario: user.atencion_tipo_usuario
-            }
-          });
-
-          return {
-            reply: buildMeetingReply(CALENDLY_LINK),
-            source: "backend"
-          };
-        }
-
         return {
-          reply: "Por favor responde con 1️⃣ o 2️⃣.",
+          reply: "Por favor responde con 1️⃣.",
           source: "backend"
         };
       }
