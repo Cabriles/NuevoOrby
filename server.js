@@ -103,10 +103,28 @@ app.get("/webhook", (req, res) => {
 
 app.post("/webhook", async (req, res) => {
   try {
+    console.log("==================================================");
+    console.log("📥 WEBHOOK RECIBIDO");
+    console.log("BODY:", JSON.stringify(req.body, null, 2));
+
     const result = await handleWebhookPayload(req.body);
 
+    console.log("🧠 RESULTADO handleWebhookPayload:", result);
+
     if (result?.to && result?.reply) {
-      await sendWhatsAppTextMessage(result.to, result.reply);
+      console.log("📤 Intentando enviar respuesta");
+      console.log("TO:", result.to);
+      console.log("REPLY:", result.reply);
+
+      const metaResponse = await sendWhatsAppTextMessage(result.to, result.reply);
+
+      console.log("✅ RESPUESTA META OK:", metaResponse?.data || metaResponse);
+    } else {
+      console.log("⚠️ No se enviará respuesta.");
+      console.log("Motivo: result.to o result.reply vacíos.");
+      console.log("TO:", result?.to || null);
+      console.log("REPLY:", result?.reply || null);
+      console.log("SOURCE:", result?.source || null);
     }
 
     return res.status(200).json({
@@ -116,10 +134,10 @@ app.post("/webhook", async (req, res) => {
       to: result?.to || null
     });
   } catch (error) {
-    console.error(
-      "Error en /webhook:",
-      error?.response?.data || error?.message || error
-    );
+    console.error("❌ Error en /webhook:");
+    console.error("MESSAGE:", error?.message || error);
+    console.error("META DATA:", error?.response?.data || null);
+    console.error("STATUS:", error?.response?.status || null);
 
     return res.status(500).json({
       ok: false,
