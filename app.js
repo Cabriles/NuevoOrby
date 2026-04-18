@@ -509,6 +509,8 @@ async function handleWebhookPayload(payload = {}) {
       message = incomingMessage?.button?.text || "";
     } else if (incomingMessage?.type === "interactive") {
       message =
+        incomingMessage?.interactive?.list_reply?.id ||
+        incomingMessage?.interactive?.button_reply?.id ||
         incomingMessage?.interactive?.button_reply?.title ||
         incomingMessage?.interactive?.list_reply?.title ||
         "";

@@ -3,6 +3,8 @@ require("dotenv").config();
 const axios = require("axios");
 const { handleWebhookPayload } = require("./app");
 const express = require("express");
+const { getMainMenu } = require("./services/menu");
+const { getMenuOptions } = require("./services/menuOptions");
 
 // ========================================================
 // CONFIG
@@ -31,11 +33,9 @@ app.use(express.json({ limit: "2mb" }));
 app.use(express.urlencoded({ extended: true }));
 
 // ========================================================
-// WHATSAPP SENDER
+// HELPERS WHATSAPP
 // ========================================================
-async function sendWhatsAppTextMessage(to, body) {
-  if (!to || !body) return null;
-
+function getWhatsAppMessagesUrl() {
   if (!WHATSAPP_TOKEN) {
     throw new Error("Falta WHATSAPP_TOKEN en variables de entorno");
   }
@@ -44,7 +44,77 @@ async function sendWhatsAppTextMessage(to, body) {
     throw new Error("Falta WHATSAPP_PHONE_NUMBER_ID en variables de entorno");
   }
 
-  const url = `https://graph.facebook.com/v22.0/${WHATSAPP_PHONE_NUMBER_ID}/messages`;
+  return `https://graph.facebook.com/v22.0/${WHATSAPP_PHONE_NUMBER_ID}/messages`;
+}
+
+function truncateText(value = "", maxLength = 72) {
+  const text = String(value || "").trim();
+
+  if (!text) return "";
+  if (text.length <= maxLength) return text;
+
+  return `${text.slice(0, maxLength - 3).trim()}...`;
+}
+
+function getInteractiveRowTitle(option = {}) {
+  const titleMap = {
+    amazon: "Amazon FBA",
+    automatizacion: "Automatización e IA",
+    ecommerce: "Ecommerce y Marketing",
+    importacion: "Importación y Comercio",
+    atencion: "Atención al Cliente"
+  };
+
+  return titleMap[option.key] || truncateText(option.label || "Opción", 24);
+}
+
+function buildMainMenuRows() {
+  return getMenuOptions().map((option) => ({
+    id: option.interactive_id,
+    title: getInteractiveRowTitle(option),
+    description: truncateText(option.descripcion || option.label || "", 72)
+  }));
+}
+
+function extractMainMenuBodyText(reply = "") {
+  const mainMenuText = getMainMenu();
+  const normalizedReply = String(reply || "").trim();
+
+  if (!normalizedReply) {
+    return "Selecciona una opción para continuar.";
+  }
+
+  if (normalizedReply === mainMenuText) {
+    return "Selecciona una opción para continuar.";
+  }
+
+  if (normalizedReply.includes(mainMenuText)) {
+    const bodyText = normalizedReply.replace(mainMenuText, "").trim();
+    return bodyText || "Selecciona una opción para continuar.";
+  }
+
+  return normalizedReply;
+}
+
+function shouldSendInteractiveMainMenu(reply = "") {
+  const mainMenuText = getMainMenu();
+  const normalizedReply = String(reply || "").trim();
+
+  if (!normalizedReply) return false;
+
+  return (
+    normalizedReply === mainMenuText ||
+    normalizedReply.includes(mainMenuText)
+  );
+}
+
+// ========================================================
+// WHATSAPP SENDER
+// ========================================================
+async function sendWhatsAppTextMessage(to, body) {
+  if (!to || !body) return null;
+
+  const url = getWhatsAppMessagesUrl();
 
   return axios.post(
     url,
@@ -63,6 +133,64 @@ async function sendWhatsAppTextMessage(to, body) {
       }
     }
   );
+}
+
+async function sendWhatsAppInteractiveListMessage(to, bodyText) {
+  if (!to) return null;
+
+  const url = getWhatsAppMessagesUrl();
+  const safeBodyText = truncateText(
+    bodyText || "Selecciona una opción para continuar.",
+    1024
+  );
+
+  return axios.post(
+    url,
+    {
+      messaging_product: "whatsapp",
+      to,
+      type: "interactive",
+      interactive: {
+        type: "list",
+        header: {
+          type: "text",
+          text: "Menú principal"
+        },
+        body: {
+          text: safeBodyText
+        },
+        footer: {
+          text: "También puedes escribir MENU, ATRAS o REINICIAR."
+        },
+        action: {
+          button: "Ver opciones",
+          sections: [
+            {
+              title: "Opciones disponibles",
+              rows: buildMainMenuRows()
+            }
+          ]
+        }
+      }
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${WHATSAPP_TOKEN}`,
+        "Content-Type": "application/json"
+      }
+    }
+  );
+}
+
+async function sendWhatsAppReply(to, reply) {
+  if (!to || !reply) return null;
+
+  if (shouldSendInteractiveMainMenu(reply)) {
+    const bodyText = extractMainMenuBodyText(reply);
+    return sendWhatsAppInteractiveListMessage(to, bodyText);
+  }
+
+  return sendWhatsAppTextMessage(to, reply);
 }
 
 // ========================================================
@@ -116,7 +244,7 @@ app.post("/webhook", async (req, res) => {
       console.log("TO:", result.to);
       console.log("REPLY:", result.reply);
 
-      const metaResponse = await sendWhatsAppTextMessage(result.to, result.reply);
+      const metaResponse = await sendWhatsAppReply(result.to, result.reply);
 
       console.log("✅ RESPUESTA META OK:", metaResponse?.data || metaResponse);
     } else {

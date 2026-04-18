@@ -5,6 +5,7 @@
 const MENU_OPTIONS = [
   {
     id: "1",
+    interactive_id: "menu_amazon",
     key: "amazon",
     label: "Amazon FBA",
     estado_inicial: "amazon_p1",
@@ -13,6 +14,7 @@ const MENU_OPTIONS = [
   },
   {
     id: "2",
+    interactive_id: "menu_automatizacion",
     key: "automatizacion",
     label: "Automatización y Agentes de IA",
     estado_inicial: "automatizacion_p1",
@@ -21,6 +23,7 @@ const MENU_OPTIONS = [
   },
   {
     id: "3",
+    interactive_id: "menu_ecommerce",
     key: "ecommerce",
     label: "Ecommerce y Marketing Digital",
     estado_inicial: "ecommerce_p1",
@@ -29,6 +32,7 @@ const MENU_OPTIONS = [
   },
   {
     id: "4",
+    interactive_id: "menu_importacion",
     key: "importacion",
     label: "Importación y Comercio Exterior",
     estado_inicial: "importacion_p1",
@@ -37,6 +41,7 @@ const MENU_OPTIONS = [
   },
   {
     id: "5",
+    interactive_id: "menu_atencion",
     key: "atencion",
     label: "Atención al Cliente",
     estado_inicial: "atencion_p1",
@@ -56,6 +61,14 @@ function getMenuOptionById(id) {
   return MENU_OPTIONS.find((option) => option.id === String(id)) || null;
 }
 
+function getMenuOptionByInteractiveId(interactiveId) {
+  return (
+    MENU_OPTIONS.find(
+      (option) => option.interactive_id === String(interactiveId).trim().toLowerCase()
+    ) || null
+  );
+}
+
 function getMenuOptionByKey(key) {
   return (
     MENU_OPTIONS.find((option) => option.key === String(key).trim().toLowerCase()) ||
@@ -68,13 +81,29 @@ function getInitialStateByOption(id) {
   return option ? option.estado_inicial : null;
 }
 
+function getInitialStateByInteractiveId(interactiveId) {
+  const option = getMenuOptionByInteractiveId(interactiveId);
+  return option ? option.estado_inicial : null;
+}
+
 function getIntentByOption(id) {
   const option = getMenuOptionById(id);
   return option ? option.intent : null;
 }
 
+function getIntentByInteractiveId(interactiveId) {
+  const option = getMenuOptionByInteractiveId(interactiveId);
+  return option ? option.intent : null;
+}
+
 function isValidMainMenuOption(id) {
   return MENU_OPTIONS.some((option) => option.id === String(id));
+}
+
+function isValidMainMenuInteractiveOption(interactiveId) {
+  return MENU_OPTIONS.some(
+    (option) => option.interactive_id === String(interactiveId).trim().toLowerCase()
+  );
 }
 
 // ========================================================
@@ -84,8 +113,12 @@ module.exports = {
   MENU_OPTIONS,
   getMenuOptions,
   getMenuOptionById,
+  getMenuOptionByInteractiveId,
   getMenuOptionByKey,
   getInitialStateByOption,
+  getInitialStateByInteractiveId,
   getIntentByOption,
-  isValidMainMenuOption
+  getIntentByInteractiveId,
+  isValidMainMenuOption,
+  isValidMainMenuInteractiveOption
 };

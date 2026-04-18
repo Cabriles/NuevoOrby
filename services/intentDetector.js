@@ -1,7 +1,9 @@
 const { parseMenuOption, normalizeText } = require("./utils");
 const {
   isValidMainMenuOption,
+  isValidMainMenuInteractiveOption,
   getMenuOptionById,
+  getMenuOptionByInteractiveId,
   getInitialStateByOption
 } = require("./menuOptions");
 
@@ -80,6 +82,24 @@ function buildMenuSelectionResult(optionId) {
     source: "menu",
     matched: true,
     option_id: option.id,
+    interactive_id: option.interactive_id || null,
+    module: option.key,
+    intent: option.intent,
+    estado_inicial: option.estado_inicial,
+    option
+  };
+}
+
+function buildInteractiveMenuSelectionResult(interactiveId) {
+  const option = getMenuOptionByInteractiveId(interactiveId);
+
+  if (!option) return null;
+
+  return {
+    source: "interactive_menu",
+    matched: true,
+    option_id: option.id,
+    interactive_id: option.interactive_id,
     module: option.key,
     intent: option.intent,
     estado_inicial: option.estado_inicial,
@@ -113,7 +133,7 @@ function isDirectEntryIntent(intent = "") {
 }
 
 // ========================================================
-// DETECCIÓN POR MENÚ
+// DETECCIÓN POR MENÚ TEXTO
 // ========================================================
 function detectMenuSelection(text = "") {
   const option = parseMenuOption(text);
@@ -122,6 +142,18 @@ function detectMenuSelection(text = "") {
   if (!isValidMainMenuOption(option)) return null;
 
   return buildMenuSelectionResult(option);
+}
+
+// ========================================================
+// DETECCIÓN POR MENÚ INTERACTIVO
+// ========================================================
+function detectInteractiveMenuSelection(text = "") {
+  const interactiveId = String(text || "").trim().toLowerCase();
+
+  if (!interactiveId) return null;
+  if (!isValidMainMenuInteractiveOption(interactiveId)) return null;
+
+  return buildInteractiveMenuSelectionResult(interactiveId);
 }
 
 // ========================================================
@@ -160,6 +192,9 @@ function detectIntent(text = "") {
     };
   }
 
+  const interactiveMenuMatch = detectInteractiveMenuSelection(normalizedText);
+  if (interactiveMenuMatch) return interactiveMenuMatch;
+
   const menuMatch = detectMenuSelection(normalizedText);
   if (menuMatch) return menuMatch;
 
@@ -183,12 +218,12 @@ function resolveModuleEntry(text = "") {
 
   if (!result?.matched) return null;
 
-  if (result.source === "menu") {
+  if (result.source === "menu" || result.source === "interactive_menu") {
     return {
       module: result.module,
       intent: result.intent,
       estado_inicial: result.estado_inicial,
-      via: "menu"
+      via: result.source
     };
   }
 
@@ -216,6 +251,7 @@ module.exports = {
   MODULES_BY_KEY,
   INTENT_DETECTORS,
   detectMenuSelection,
+  detectInteractiveMenuSelection,
   detectFreeTextIntent,
   detectIntent,
   resolveModuleEntry,
