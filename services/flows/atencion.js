@@ -153,7 +153,7 @@ function buildSupportOpening(user) {
   }
 
   if (user.atencion_tipo_usuario === "escalado_directo") {
-    return `Entiendo. Voy a ayudarte a dejar tu caso claro para que un asesor pueda revisarlo correctamente.`;
+    return `Perfecto. Un asesor puede revisar tu caso y darte seguimiento.`;
   }
 
   return `Entiendo. Voy a ayudarte a canalizar tu consulta de forma clara para que pueda revisarse correctamente.`;
@@ -179,7 +179,7 @@ function buildSupportFocus(user, userMessage = "") {
   }
 
   if (user.atencion_tipo_usuario === "escalado_directo") {
-    return "Puedo dejar tu solicitud lista ahora para que te contacten directamente por WhatsApp y den seguimiento a tu caso.";
+    return "¿Quieres que te contacten ahora?";
   }
 
   if (msg.includes("ventas")) {
