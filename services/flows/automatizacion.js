@@ -537,58 +537,58 @@ function buildSecondTurnImplementationDetail(user, userMessage = "") {
   if (user.automatizacion_rama === "atencion_ventas") {
     if (user.automatizacion_objetivo === "calificar_leads_agendar") {
       if (msg.includes("lead")) {
-        return "Si hoy el reto principal está en conseguir más leads, entonces antes de automatizar el agendamiento conviene fortalecer la captación, mejorar los puntos de entrada y filtrar mejor desde el inicio para que el sistema trabaje con oportunidades más reales.";
+        return "Aquí lo importante sería mejorar la captación y el filtro de entrada para que la automatización trabaje con oportunidades más reales.";
       }
 
       if (msg.includes("filtrar") || msg.includes("calific")) {
-        return "Si el problema está en filtrar mejor, entonces lo más útil es definir criterios de calificación, preguntas clave y reglas de prioridad para que el bot separe mejor a los prospectos antes de pasarlos a agenda o seguimiento.";
+        return "Aquí conviene definir mejor criterios de calificación y automatizar ese filtro desde el inicio para separar mejor a los prospectos antes de agenda o seguimiento.";
       }
 
       if (msg.includes("reunion") || msg.includes("reunión")) {
-        return "Si el cuello de botella está en convertir conversaciones en reuniones, entonces hay que trabajar mejor la transición entre interés, confianza y agenda para reducir fricción y mejorar conversión.";
+        return "Aquí lo más útil sería ordenar mejor la transición entre interés y agenda para reducir fricción y aumentar conversión.";
       }
 
-      return "Aquí conviene revisar exactamente dónde se cae hoy la conversación comercial para automatizar ese tramo con más precisión y no repetir pasos que todavía no están resolviendo el problema.";
+      return "Aquí conviene identificar con precisión dónde se enfría hoy la conversación comercial para automatizar ese tramo con más sentido.";
     }
 
     if (user.automatizacion_objetivo === "faq_soporte") {
-      return "Aquí tendría más sentido ordenar respuestas frecuentes, criterios de escalamiento y tiempos de atención para que el equipo no cargue con consultas repetitivas y el usuario reciba una experiencia más consistente.";
+      return "Aquí tendría sentido ordenar respuestas frecuentes y criterios de escalamiento para dar una atención más consistente sin cargar tanto al equipo.";
     }
 
     if (user.automatizacion_objetivo === "pedidos_pagos") {
-      return "Aquí lo importante sería reducir fricción entre consulta, validación y cierre, para que el sistema no solo responda, sino que ayude a mover la operación comercial con más orden.";
+      return "Aquí lo importante sería reducir fricción entre consulta, validación y cierre para que el flujo comercial avance con más orden.";
     }
   }
 
   if (user.automatizacion_rama === "procesos_internos") {
     if (user.automatizacion_objetivo === "procesamiento_datos") {
-      return "En este caso, el valor real estaría en ordenar validaciones, reducir errores y definir un flujo claro para que el equipo deje de depender de correcciones manuales y gane velocidad operativa.";
+      return "Aquí el valor real estaría en ordenar validaciones, reducir errores y definir un flujo claro para procesar mejor la información.";
     }
 
     if (user.automatizacion_objetivo === "notificaciones_seguimiento") {
-      return "Aquí conviene identificar qué alertas o seguimientos generan más fricción hoy, para automatizar solo lo que realmente le quite carga al equipo y mejore continuidad.";
+      return "Aquí conviene automatizar alertas y seguimientos en los puntos donde hoy más se pierde tiempo o continuidad.";
     }
 
     if (user.automatizacion_objetivo === "sincronizacion_bases") {
-      return "Aquí el punto crítico sería alinear fuentes, evitar duplicidades y asegurar que la información se mantenga actualizada entre herramientas sin intervención manual constante.";
+      return "Aquí el punto clave sería alinear fuentes y mantener la información actualizada sin intervención manual constante.";
     }
   }
 
   if (user.automatizacion_rama === "agentes_especializados") {
     if (user.automatizacion_objetivo === "base_conocimiento") {
-      return "Aquí tendría más sentido organizar mejor las fuentes de información y entrenar el agente sobre casos reales para que responda con contexto útil y no con respuestas genéricas.";
+      return "Aquí tendría sentido organizar mejor las fuentes y entrenar el agente sobre información realmente útil para la operación.";
     }
 
     if (user.automatizacion_objetivo === "asistente_autonomo") {
-      return "Aquí lo importante sería definir límites, permisos y tareas concretas para que el agente aporte valor operativo sin convertirse en una caja negra.";
+      return "Aquí lo importante sería definir límites, permisos y tareas concretas para que el agente aporte valor real.";
     }
 
     if (user.automatizacion_objetivo === "reduccion_costos") {
-      return "Aquí el foco debería estar en detectar dónde se desperdicia más tiempo o recursos para automatizar esos puntos y generar una mejora realmente medible.";
+      return "Aquí el foco debería estar en detectar desperdicios operativos y automatizar solo lo que realmente mejora eficiencia.";
     }
   }
 
-  return "Aquí conviene aterrizar mejor ese punto específico para que la automatización resuelva una necesidad real y no se quede en una mejora superficial.";
+  return "Aquí conviene aterrizar mejor ese punto para que la automatización resuelva algo real y no se quede en una mejora superficial.";
 }
 
 function buildStrongSecondTurnFallback(user, userMessage) {
@@ -694,15 +694,14 @@ function maybeReinforceSecondTurnBeforeCTA(text = "", user, userMessage = "") {
   }
 
   if (
-    countWords(clean) < 34 ||
-    !containsAnyKeyword(clean, ["conviene", "clave", "importante", "ordenar", "mejorar", "oneorbix"])
+    countWords(clean) < 26 ||
+    !containsAnyKeyword(clean, ["conviene", "clave", "importante", "ordenar", "mejorar"])
   ) {
     clean = buildStrongSecondTurnFallback(user, userMessage);
   }
 
   return clean.trim();
 }
-
 // ========================================================
 // FALLBACKS
 // ========================================================
