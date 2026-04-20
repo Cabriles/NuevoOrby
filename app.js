@@ -55,7 +55,7 @@ const {
 // CONFIG
 // ========================================================
 const CALENDLY_LINK =
-  process.env.CALENDLY_LINK || "https://calendly.com/tu-enlace";
+  process.env.CALENDLY_LINK || "https://calendly.com/oneorbix/30min";
 
 // ========================================================
 // HELPERS GENERALES
