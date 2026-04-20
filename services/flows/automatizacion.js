@@ -634,15 +634,21 @@ function ensureFirstTurnHasConsultiveDepth(text = "", user) {
   let clean = sanitizeHybridText(text);
 
   const needsReinforcement =
-    countWords(clean) < 55 ||
-    countParagraphs(clean) < 2 ||
-    !containsAnyKeyword(clean, ["oneorbix", "implementar", "implementación", "flujo", "proceso", "automatizar", "agenda", "seguimiento"]);
+    countWords(clean) < 34 ||
+    (
+      countParagraphs(clean) < 1 &&
+      !containsAnyKeyword(clean, ["oneorbix", "implementar", "implementación", "flujo", "proceso", "automatizar", "agenda", "seguimiento", "operacion", "operación"])
+    ) ||
+    !containsAnyKeyword(clean, ["conviene", "clave", "importante", "priorizar", "ordenar", "mejorar", "oneorbix"]);
 
   if (needsReinforcement) {
     clean = buildStrongFirstTurnFallback(user);
   }
 
-  clean = ensureTwoParagraphStructure(clean);
+  if (countParagraphs(clean) >= 2) {
+    clean = ensureTwoParagraphStructure(clean);
+  }
+
   clean = ensureFirstTurnHasQuestion(clean, user);
 
   return clean.trim();
@@ -660,15 +666,21 @@ function ensureSecondTurnHasSubstance(text = "", user, userMessage = "") {
   let clean = sanitizeHybridText(text);
 
   const needsReinforcement =
-    countWords(clean) < 45 ||
-    countParagraphs(clean) < 2 ||
-    !containsAnyKeyword(clean, ["oneorbix", "implementar", "implementación", "flujo", "reglas", "proceso", "automatizar", "herramientas", "operación", "operativa"]);
+    countWords(clean) < 30 ||
+    (
+      countParagraphs(clean) < 1 &&
+      !containsAnyKeyword(clean, ["oneorbix", "implementar", "implementación", "flujo", "reglas", "proceso", "automatizar", "herramientas", "operación", "operativa"])
+    ) ||
+    !containsAnyKeyword(clean, ["conviene", "clave", "importante", "priorizar", "ordenar", "mejorar", "oneorbix"]);
 
   if (needsReinforcement) {
     clean = buildStrongSecondTurnFallback(user, userMessage);
   }
 
-  clean = ensureTwoParagraphStructure(clean);
+  if (countParagraphs(clean) >= 2) {
+    clean = ensureTwoParagraphStructure(clean);
+  }
+
   clean = ensureSecondTurnNoRepeatedQuestion(clean);
 
   return clean.trim();
@@ -681,7 +693,10 @@ function maybeReinforceSecondTurnBeforeCTA(text = "", user, userMessage = "") {
     clean = stripTrailingQuestionParagraphs(clean).trim();
   }
 
-  if (countWords(clean) < 50) {
+  if (
+    countWords(clean) < 34 ||
+    !containsAnyKeyword(clean, ["conviene", "clave", "importante", "ordenar", "mejorar", "oneorbix"])
+  ) {
     clean = buildStrongSecondTurnFallback(user, userMessage);
   }
 
@@ -720,7 +735,7 @@ function buildGeminiPrompt(user, isFollowUp = false, userMessage = "", withCTA =
 
   const closingInstruction = withCTA
     ? `- Cierra de forma natural, sin hacer preguntas finales, porque el backend añadirá el siguiente paso comercial.
-- El cierre debe dejar sensación de claridad, criterio y plan de acción.`
+- El cierre debe dejar sensación de claridad, criterio y siguiente paso.`
     : isFollowUp
       ? `- Si todavía conviene profundizar, puedes cerrar con una sola pregunta NUEVA y más específica que la primera.
 - No repitas la misma pregunta del turno anterior.
@@ -743,7 +758,8 @@ function buildGeminiPrompt(user, isFollowUp = false, userMessage = "", withCTA =
 - No reformules el objetivo de forma obvia.
 - Propón una solución consultiva y aterrizada.
 - Abre la conversación con una sola pregunta estratégica para explorar mejor el problema.
-- La respuesta debe sentirse como la de un asesor que vende implementación real, no como la de un bot básico.`;
+- La respuesta debe sentirse como la de un asesor que vende implementación real, no como la de un bot básico.
+- Prioriza claridad y utilidad sobre amplitud.`;
 
   return `
 Eres Orby, asesor comercial senior de OneOrbix especializado en automatización, procesos, agentes de IA y crecimiento operativo.
@@ -786,13 +802,14 @@ INSTRUCCIONES
 - Debe quedar claro el beneficio esperado para el negocio.
 - Debes sonar como alguien que entiende negocio, operación e implementación real.
 - Evita respuestas de una sola idea o una sola frase corta.
-- La respuesta debe tener suficiente sustancia consultiva para que no parezca un chatbot genérico.
+- No repitas la misma idea con palabras distintas.
+- Prioriza una respuesta más corta pero más útil.
 ${turnInstruction}
 ${closingInstruction}
-- Escribe entre 2 y 3 párrafos cortos.
+- Escribe en 1 o 2 párrafos breves.
+- Idealmente entre 4 y 6 líneas.
   `.trim();
 }
-
 // ========================================================
 // RESOLVERS HÍBRIDOS
 // ========================================================
@@ -1157,7 +1174,6 @@ async function handleAutomatizacionFlow({
         source: "backend"
       };
     }
-
     // =====================================================
     // RAMA 2 — PROCESOS INTERNOS
     // =====================================================
