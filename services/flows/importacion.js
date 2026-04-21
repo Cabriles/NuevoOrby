@@ -93,7 +93,14 @@ function getStandardCTA() {
 }
 
 function buildHybridReply(aiReply, withCTA = false) {
-  const cleanReply = String(aiReply || "").trim();
+  let cleanReply = String(aiReply || "").trim();
+
+  cleanReply = highlightBrand(cleanReply);
+
+  cleanReply = cleanReply
+    .split("\n\n")
+    .map((p) => highlightDecisionLead(p))
+    .join("\n\n");
 
   if (withCTA) {
     return `${cleanReply}
@@ -103,7 +110,6 @@ ${getStandardCTA()}`;
 
   return cleanReply;
 }
-
 function buildCallbackConfirmationReply(callbackPhone, callbackSchedule) {
   return `Perfecto. Hemos tomado tu solicitud.
 
@@ -119,6 +125,43 @@ function buildMeetingReply(CALENDLY_LINK) {
 ${CALENDLY_LINK}
 
 Cuando la reserves, ya tendremos una base más clara para revisar tu caso.`;
+
+}
+function bold(text = "") {
+  const clean = String(text || "").trim();
+  if (!clean) return "";
+  if (clean.startsWith("*") && clean.endsWith("*")) return clean;
+  return `*${clean}*`;
+}
+
+function highlightBrand(text = "") {
+  return String(text || "").replace(/\bOneOrbix\b/g, "*OneOrbix*");
+}
+
+function highlightDecisionLead(text = "") {
+  const clean = String(text || "").trim();
+  if (!clean) return clean;
+
+  const patterns = [
+    /^La prioridad aquí es/i,
+    /^El punto clave aquí es/i,
+    /^El riesgo aquí es/i,
+    /^Lo importante aquí es/i,
+    /^En este punto vale la pena/i,
+    /^Primero hay que/i,
+    /^Aquí conviene/i,
+    /^Aquí lo importante/i,
+    /^Aquí tendría sentido/i,
+    /^Aquí lo más útil/i
+  ];
+
+  for (const pattern of patterns) {
+    if (pattern.test(clean)) {
+      return bold(clean);
+    }
+  }
+
+  return clean;
 }
 
 // ========================================================
@@ -233,43 +276,43 @@ function buildImportacionPriority(user) {
 function buildFirstTurnQuestion(user) {
   if (user.importacion_rama === "importar_productos") {
     if (user.importacion_metadata === "logistica_import") {
-      return "Para orientarte mejor, dime qué te preocupa más hoy: costos logísticos, tiempos de llegada o entender bien el proceso para traer ese producto?";
+      return bold("¿Qué te preocupa más hoy: costos logísticos, tiempos de llegada o entender bien el proceso para traer ese producto?");
     }
 
     if (user.importacion_metadata === "viabilidad_import") {
-      return "Para aterrizarlo mejor, dime qué necesitas validar primero: márgenes, demanda o si realmente vale la pena importarlo?";
+      return bold("¿Qué necesitas validar primero: márgenes, demanda o si realmente vale la pena importarlo?");
     }
 
     if (user.importacion_metadata === "rentabilidad_nicho") {
-      return "Para afinar la recomendación, dime qué te preocupa más hoy: encontrar margen, reducir riesgo o detectar una categoría más rentable?";
+      return bold("¿Qué te preocupa más hoy: encontrar margen, reducir riesgo o detectar una categoría más rentable?");
     }
 
     if (user.importacion_metadata === "demanda_mercado") {
-      return "Para orientarte mejor, dime qué necesitas confirmar primero: demanda real, competencia o qué tan defendible sería ese producto en tu mercado?";
+      return bold("¿Qué necesitas confirmar primero: demanda real, competencia o qué tan defendible sería ese producto en tu mercado?");
     }
   }
 
   if (user.importacion_rama === "exportar_productos") {
     if (user.importacion_metadata === "captacion_clientes") {
-      return "Para aterrizar mejor esto, dime qué te preocupa más hoy: conseguir contactos reales, llegar al mercado correcto o saber cómo presentar mejor tu producto al exterior?";
+      return bold("¿Qué te preocupa más hoy: conseguir contactos reales, llegar al mercado correcto o saber cómo presentar mejor tu producto al exterior?");
     }
 
     if (user.importacion_metadata === "guia_export_inicial") {
-      return "Para orientarte mejor, dime qué te pesa más hoy: no saber por dónde empezar, entender los pasos correctos o evitar errores al inicio del proceso?";
+      return bold("¿Qué te pesa más hoy: no saber por dónde empezar, entender los pasos correctos o evitar errores al inicio del proceso?");
     }
   }
 
   if (user.importacion_rama === "buscar_proveedores") {
     if (user.importacion_metadata === "sourcing_confiable") {
-      return "Para afinar la recomendación, dime qué te preocupa más hoy: encontrar un proveedor serio, evitar estafas o saber cómo filtrar mejor las opciones?";
+      return bold("¿Qué te preocupa más hoy: encontrar un proveedor serio, evitar estafas o saber cómo filtrar mejor las opciones?");
     }
 
     if (user.importacion_metadata === "comparativa_sourcing") {
-      return "Para aterrizarlo mejor, dime qué necesitas resolver primero: comparar precios, evaluar calidad o entender cuál cotización realmente te conviene más?";
+      return bold("¿Qué necesitas resolver primero: comparar precios, evaluar calidad o entender cuál cotización realmente te conviene más?");
     }
   }
 
-  return "Para orientarte mejor, dime qué necesitas resolver primero dentro de tu caso?";
+  return bold("¿Qué necesitas resolver primero dentro de tu caso?");
 }
 
 function buildFallbackReply(user) {
@@ -306,38 +349,38 @@ function buildSecondTurnAnchor(userMessage = "") {
   const clean = String(userMessage || "").trim().toLowerCase();
 
   if (!clean) {
-    return "Aquí ya conviene bajar esto a una decisión más puntual para que el siguiente paso no se tome a ciegas.";
+    return "En este punto vale la pena bajar esto a una decisión más puntual para que el siguiente paso no se tome a ciegas.";
   }
 
   if (clean.includes("costo") || clean.includes("coste") || clean.includes("margen")) {
-    return "Si la duda principal está en costos o márgenes, entonces no conviene avanzar solo por intuición, sino entender mejor si la operación realmente se sostiene.";
+    return "El punto clave aquí es entender si la operación realmente se sostiene antes de decidir con base solo en intuición.";
   }
 
   if (clean.includes("demanda")) {
-    return "Si el foco está en la demanda, entonces conviene validar si hay movimiento real y espacio suficiente antes de comprometerte con una operación que luego sea difícil de rotar.";
+    return "La prioridad aquí es validar si hay movimiento real y suficiente espacio comercial antes de comprometerte con una operación difícil de rotar.";
   }
 
   if (clean.includes("compet")) {
-    return "Si lo que más te pesa es la competencia, entonces hay que mirar mejor si todavía existe espacio comercial y qué tan defendible sería entrar en esa categoría.";
+    return "Lo importante aquí es medir qué tan defendible sería entrar en esa categoría y si todavía existe espacio comercial.";
   }
 
   if (clean.includes("tiempo") || clean.includes("logist") || clean.includes("envio")) {
-    return "Si el problema hoy está en tiempos o logística, entonces conviene ordenar bien la ruta operativa antes de asumir que traer o mover el producto será simple.";
+    return "La prioridad aquí es ordenar bien la ruta operativa antes de asumir que traer o mover el producto será simple.";
   }
 
   if (clean.includes("proveedor") || clean.includes("fabrica") || clean.includes("fábrica")) {
-    return "Si la preocupación está en proveedores o fabricantes, entonces lo clave es filtrar mejor y reducir riesgo antes de quedarte solo con la cotización más atractiva.";
+    return "El riesgo aquí es quedarte con la cotización más atractiva sin filtrar mejor confiabilidad y respaldo.";
   }
 
   if (clean.includes("cliente") || clean.includes("comprador")) {
-    return "Si el reto está en conseguir compradores, entonces conviene trabajar mejor el acceso al mercado y no solo confiar en que el producto se venderá por sí solo.";
+    return "Lo importante aquí es trabajar mejor el acceso al mercado y no confiar en que el producto se venderá por sí solo.";
   }
 
   if (clean.includes("export")) {
-    return "Si la duda está en cómo exportar correctamente, entonces la prioridad debería ser ordenar mejor la estructura inicial antes de salir a ejecutar.";
+    return "La prioridad aquí es ordenar mejor la estructura inicial antes de salir a ejecutar.";
   }
 
-  return `Con lo que mencionas sobre "${userMessage}", lo importante ahora es aterrizar mejor ese punto para que la decisión se apoye en criterio comercial real y no solo en intuición.`;
+  return "La prioridad aquí es aterrizar mejor ese punto para que la decisión se apoye en criterio comercial real y no solo en intuición.";
 }
 
 function buildSecondTurnImplementationDetail(user, userMessage = "") {
@@ -346,82 +389,82 @@ function buildSecondTurnImplementationDetail(user, userMessage = "") {
   if (user.importacion_rama === "importar_productos") {
     if (user.importacion_metadata === "logistica_import") {
       if (msg.includes("costo") || msg.includes("coste")) {
-        return "Aquí tendría sentido revisar el costo completo puesto en destino, porque mirar solo el precio de origen suele dar una lectura engañosa de la operación.";
+        return "Lo importante aquí es revisar el costo completo puesto en destino, porque mirar solo el precio de origen suele dar una lectura engañosa de la operación.";
       }
 
       if (msg.includes("tiempo") || msg.includes("logist") || msg.includes("envio")) {
-        return "Aquí lo importante sería entender mejor tiempos, ruta, tipo de embarque y posibles fricciones para que la logística no termine rompiendo la rentabilidad esperada.";
+        return "La prioridad aquí es entender mejor tiempos, ruta, tipo de embarque y posibles fricciones para que la logística no termine rompiendo la rentabilidad esperada.";
       }
 
-      return "Aquí conviene ordenar bien la parte operativa para que traer ese producto no dependa de suposiciones, sino de un proceso más claro y controlable.";
+      return "Primero hay que ordenar bien la parte operativa para que traer ese producto no dependa de suposiciones, sino de un proceso más claro y controlable.";
     }
 
     if (user.importacion_metadata === "viabilidad_import") {
       if (msg.includes("margen") || msg.includes("costo")) {
-        return "Aquí conviene desarmar bien la estructura de costos para ver si después de logística, nacionalización y rotación el producto sigue siendo defendible.";
+        return "El punto clave aquí es desarmar bien la estructura de costos para ver si después de logística, nacionalización y rotación el producto sigue siendo defendible.";
       }
 
       if (msg.includes("demanda")) {
-        return "Aquí lo más útil sería confirmar si la demanda es suficientemente clara y sostenible antes de convertir esa idea en una operación de importación.";
+        return "La prioridad aquí es confirmar si la demanda es suficientemente clara y sostenible antes de convertir esa idea en una operación de importación.";
       }
 
-      return "Aquí tendría sentido revisar si el producto realmente se sostiene como negocio y no solo como una idea que parece buena en papel.";
+      return "Lo importante aquí es revisar si el producto realmente se sostiene como negocio y no solo como una idea que parece buena en papel.";
     }
 
     if (user.importacion_metadata === "rentabilidad_nicho") {
-      return "Aquí conviene construir mejor el criterio de selección para que la elección no dependa solo de intuición, sino de margen, rotación y sentido comercial real.";
+      return "Primero hay que construir mejor el criterio de selección para que la elección no dependa solo de intuición, sino de margen, rotación y sentido comercial real.";
     }
 
     if (user.importacion_metadata === "demanda_mercado") {
       if (msg.includes("demanda")) {
-        return "Aquí tendría sentido validar mejor si existe un movimiento real en el mercado y no solo señales superficiales que puedan dar una falsa sensación de oportunidad.";
+        return "Lo importante aquí es validar si existe un movimiento real en el mercado y no solo señales superficiales que puedan dar una falsa sensación de oportunidad.";
       }
 
       if (msg.includes("compet")) {
-        return "Aquí conviene revisar qué tan saturado está el espacio y si todavía existe margen para entrar con una propuesta defendible.";
+        return "La prioridad aquí es revisar qué tan saturado está el espacio y si todavía existe margen para entrar con una propuesta defendible.";
       }
 
-      return "Aquí lo importante sería confirmar si el producto tiene espacio comercial suficiente para no entrar a una categoría floja o demasiado competida.";
+      return "El punto clave aquí es confirmar si el producto tiene espacio comercial suficiente para no entrar a una categoría floja o demasiado competida.";
     }
   }
 
   if (user.importacion_rama === "exportar_productos") {
     if (user.importacion_metadata === "captacion_clientes") {
       if (msg.includes("cliente") || msg.includes("comprador")) {
-        return "Aquí conviene trabajar mejor cómo identificar, abordar y filtrar compradores potenciales para que la búsqueda no se quede en contactos fríos sin avance real.";
+        return "La prioridad aquí es trabajar mejor cómo identificar, abordar y filtrar compradores potenciales para que la búsqueda no se quede en contactos fríos sin avance real.";
       }
 
-      return "Aquí tendría sentido ordenar mejor la estrategia de acceso al mercado para que la captación de compradores tenga una base más realista y comercial.";
+      return "Lo importante aquí es ordenar mejor la estrategia de acceso al mercado para que la captación de compradores tenga una base más realista y comercial.";
     }
 
     if (user.importacion_metadata === "guia_export_inicial") {
-      return "Aquí lo más útil sería ordenar el proceso por etapas, definir mejor qué va primero y evitar errores típicos del arranque que luego retrasan o encarecen todo.";
+      return "Primero hay que ordenar el proceso por etapas, definir mejor qué va primero y evitar errores típicos del arranque que luego retrasan o encarecen todo.";
     }
   }
 
   if (user.importacion_rama === "buscar_proveedores") {
     if (user.importacion_metadata === "sourcing_confiable") {
       if (msg.includes("proveedor") || msg.includes("fabrica") || msg.includes("fábrica")) {
-        return "Aquí conviene establecer mejores filtros de validación para no quedarte solo con una opción que luce bien en precio pero no en confiabilidad.";
+        return "El punto clave aquí es establecer mejores filtros de validación para no quedarte solo con una opción que luce bien en precio pero no en confiabilidad.";
       }
 
-      return "Aquí tendría sentido trabajar un sourcing más confiable para reducir riesgo y tomar decisiones con más respaldo antes de negociar o avanzar.";
+      return "La prioridad aquí es trabajar un sourcing más confiable para reducir riesgo y tomar decisiones con más respaldo antes de negociar o avanzar.";
     }
 
     if (user.importacion_metadata === "comparativa_sourcing") {
       if (msg.includes("precio") || msg.includes("cotiz")) {
-        return "Aquí lo importante sería comparar cotizaciones con más criterio, revisando qué incluye cada una y no solo el número final.";
+        return "Lo importante aquí es comparar cotizaciones con más criterio, revisando qué incluye cada una y no solo el número final.";
       }
 
       if (msg.includes("calidad")) {
-        return "Aquí conviene separar bien precio y calidad para no tomar una decisión barata que después salga cara en operación o en producto.";
+        return "El riesgo aquí es tomar una decisión barata que después salga cara en operación o en producto.";
       }
 
-      return "Aquí tendría sentido ordenar mejor la comparación para que la decisión entre proveedores no quede reducida a una lectura superficial de cotizaciones.";
+      return "La prioridad aquí es ordenar mejor la comparación para que la decisión entre proveedores no quede reducida a una lectura superficial de cotizaciones.";
     }
   }
 
-  return "Aquí conviene aterrizar mejor ese punto para que el siguiente paso sea más claro, más útil y más defendible comercialmente.";
+  return "La prioridad aquí es aterrizar mejor ese punto para que el siguiente paso sea más claro, más útil y más defendible comercialmente.";
 }
 
 function buildStrongSecondTurnFallback(user, userMessage) {
