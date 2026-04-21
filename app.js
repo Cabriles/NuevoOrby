@@ -367,20 +367,16 @@ function handleModuleEntry({ user, phone, rawMessage }) {
   const directModule = detectDirectCampaignModule(rawMessage);
 
   if (directModule) {
-    const safeModule = directModule === "club" ? "atencion" : directModule;
-    const initialState = resolveDirectModuleState(safeModule);
+    const initialState = resolveDirectModuleState(directModule);
 
     if (!initialState) return null;
 
     user.estado = initialState;
-    const safeModule = directModule === "club" ? "atencion" : directModule;
-
-user.interes_principal = safeModule;
-user.estado = resolveDirectModuleState(safeModule);
+    user.interes_principal = directModule === "club" ? "atencion" : directModule;
     saveUser(phone, user);
 
     return buildResponseWithNavigation(
-      getModuleIntroByKey(safeModule),
+      getModuleIntroByKey(directModule === "club" ? "atencion" : directModule),
       {
         source: "backend",
         matched_module: directModule,
