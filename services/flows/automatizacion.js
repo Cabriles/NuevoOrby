@@ -6,6 +6,22 @@ const {
 // ========================================================
 // HELPERS GENERALES
 // ========================================================
+function getDecisionOpeners() {
+  return [
+    "La prioridad aquí es",
+    "El punto clave aquí es",
+    "El riesgo aquí es",
+    "Lo importante aquí es",
+    "En este punto vale la pena",
+    "Primero hay que"
+  ];
+}
+
+function getRandomOpener() {
+  const list = getDecisionOpeners();
+  return list[Math.floor(Math.random() * list.length)];
+}
+
 function ensureAutomatizacionFields(user) {
   if (!user) return;
 
@@ -443,7 +459,7 @@ function buildSecondTurnAnchor(userMessage = "") {
   const clean = String(userMessage || "").trim().toLowerCase();
 
   if (!clean) {
-    return "Aquí ya conviene bajar esto a una decisión práctica para que la automatización realmente impacte tu operación.";
+    return `${getRandomOpener()} bajar esto a una decisión práctica para que la automatización realmente impacte tu operación.`;
   }
 
   // CASOS MÁS COMUNES (más naturales y comerciales)
@@ -472,7 +488,7 @@ function buildSecondTurnAnchor(userMessage = "") {
   }
 
   // DEFAULT (mucho más natural que antes)
-  return `Con lo que mencionas sobre "${userMessage}", lo importante es no automatizar por automatizar, sino atacar ese punto específico para que realmente tenga impacto en tu operación.`;
+  rreturn `${getRandomOpener()} atacar ese punto específico para que realmente tenga impacto en tu operación.`;
 }
 
 function buildImplementationMiniPlan(user) {
@@ -486,8 +502,7 @@ function buildImplementationMiniPlan(user) {
     }
 
     if (user.automatizacion_objetivo === "pedidos_pagos") {
-      return "Aquí conviene ordenar el flujo comercial, validar datos, confirmar pagos y reducir fricción entre consulta, pedido y cierre.";
-    }
+      return `${getRandomOpener()} ordenar el flujo comercial, validar datos, confirmar pagos y reducir fricción entre consulta, pedido y cierre.`; }
   }
 
   if (user.automatizacion_rama === "procesos_internos") {
@@ -541,7 +556,7 @@ function buildSecondTurnImplementationDetail(user, userMessage = "") {
       }
 
       if (msg.includes("filtrar") || msg.includes("calific")) {
-        return "Aquí conviene definir mejor criterios de calificación y automatizar ese filtro desde el inicio para separar mejor a los prospectos antes de agenda o seguimiento.";
+        return `${getRandomOpener()} definir mejor criterios de calificación y automatizar ese filtro desde el inicio para separar mejor a los prospectos antes de agenda o seguimiento.`;
       }
 
       if (msg.includes("reunion") || msg.includes("reunión")) {
