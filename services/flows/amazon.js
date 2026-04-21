@@ -92,7 +92,14 @@ function getStandardCTA() {
 }
 
 function buildHybridReply(aiReply, withCTA = false) {
-  const cleanReply = String(aiReply || "").trim();
+  let cleanReply = String(aiReply || "").trim();
+
+  cleanReply = highlightBrand(cleanReply);
+
+  cleanReply = cleanReply
+    .split("\n\n")
+    .map((p) => highlightDecisionLead(p))
+    .join("\n\n");
 
   if (withCTA) {
     return `${cleanReply}
@@ -118,6 +125,43 @@ function buildMeetingReply(CALENDLY_LINK) {
 ${CALENDLY_LINK}
 
 Cuando la reserves, ya tendremos una base más clara para revisar tu caso.`;
+}
+
+function bold(text = "") {
+  const clean = String(text || "").trim();
+  if (!clean) return "";
+  if (clean.startsWith("*") && clean.endsWith("*")) return clean;
+  return `*${clean}*`;
+}
+
+function highlightBrand(text = "") {
+  return String(text || "").replace(/\bOneOrbix\b/g, "*OneOrbix*");
+}
+
+function highlightDecisionLead(text = "") {
+  const clean = String(text || "").trim();
+  if (!clean) return clean;
+
+  const patterns = [
+    /^La prioridad aquí es/i,
+    /^El punto clave aquí es/i,
+    /^El riesgo aquí es/i,
+    /^Lo importante aquí es/i,
+    /^En este punto vale la pena/i,
+    /^Primero hay que/i,
+    /^Aquí conviene/i,
+    /^Aquí lo importante/i,
+    /^Aquí tendría sentido/i,
+    /^Aquí lo más útil/i
+  ];
+
+  for (const pattern of patterns) {
+    if (pattern.test(clean)) {
+      return bold(clean);
+    }
+  }
+
+  return clean;
 }
 
 // ========================================================
