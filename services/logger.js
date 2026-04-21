@@ -12,8 +12,12 @@ const errorsLogPath = path.join(logsDir, "errors.jsonl");
 // HELPERS
 // ========================================================
 function ensureLogsDir() {
-  if (!fs.existsSync(logsDir)) {
-    fs.mkdirSync(logsDir, { recursive: true });
+  try {
+    if (!fs.existsSync(logsDir)) {
+      fs.mkdirSync(logsDir, { recursive: true });
+    }
+  } catch (err) {
+    console.error("[LOGGER_ERROR] No se pudo crear carpeta logs:", err.message);
   }
 }
 
@@ -36,11 +40,9 @@ function sanitizeValue(value) {
 
   if (value && typeof value === "object") {
     const output = {};
-
     for (const [key, nestedValue] of Object.entries(value)) {
       output[key] = sanitizeValue(nestedValue);
     }
-
     return output;
   }
 
@@ -55,21 +57,42 @@ function buildRecord(payload = {}) {
 }
 
 function appendJsonLine(filePath, payload = {}) {
-  ensureLogsDir();
-
-  const record = buildRecord(payload);
-  fs.appendFileSync(filePath, JSON.stringify(record) + "\n", "utf8");
+  try {
+    ensureLogsDir();
+    const record = buildRecord(payload);
+    fs.appendFileSync(filePath, JSON.stringify(record) + "\n", "utf8");
+  } catch (err) {
+    console.error("[LOGGER_ERROR] No se pudo escribir en archivo:", err.message);
+  }
 }
 
 // ========================================================
 // LOGS PRINCIPALES
 // ========================================================
 function logLeadEvent(payload = {}) {
-  appendJsonLine(leadsLogPath, payload);
+  try {
+    const record = buildRecord(payload);
+
+    // 🔥 LOG EN TIEMPO REAL PARA RAILWAY
+    console.log("[LEAD_EVENT]", JSON.stringify(record));
+
+    appendJsonLine(leadsLogPath, payload);
+  } catch (err) {
+    console.error("[LOGGER_ERROR] logLeadEvent fallo:", err.message);
+  }
 }
 
 function logErrorEvent(payload = {}) {
-  appendJsonLine(errorsLogPath, payload);
+  try {
+    const record = buildRecord(payload);
+
+    // 🔥 LOG EN TIEMPO REAL PARA RAILWAY
+    console.error("[ERROR_EVENT]", JSON.stringify(record));
+
+    appendJsonLine(errorsLogPath, payload);
+  } catch (err) {
+    console.error("[LOGGER_ERROR] logErrorEvent fallo:", err.message);
+  }
 }
 
 // ========================================================
