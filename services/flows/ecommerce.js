@@ -93,7 +93,14 @@ function getStandardCTA() {
 function buildHybridReply(aiReply, withCTA = false) {
   let cleanReply = String(aiReply || "").trim();
 
+  // 🔹 Aplicar resaltado SIEMPRE al final
   cleanReply = highlightBrand(cleanReply);
+
+  // 🔹 Resaltar frases clave en TODOS los párrafos
+  cleanReply = cleanReply
+    .split("\n\n")
+    .map(p => highlightDecisionLead(p))
+    .join("\n\n");
 
   if (withCTA) {
     return `${cleanReply}
