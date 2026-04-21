@@ -9,6 +9,16 @@ const leadsLogPath = path.join(logsDir, "leads.jsonl");
 const errorsLogPath = path.join(logsDir, "errors.jsonl");
 
 // ========================================================
+// EVENTOS QUE SÍ APORTAN A NEGOCIO
+// ========================================================
+const ALLOWED_LEAD_EVENTS = [
+  "entry",
+  "qualified",
+  "cta_click",
+  "conversion_intent"
+];
+
+// ========================================================
 // HELPERS
 // ========================================================
 function ensureLogsDir() {
@@ -67,16 +77,45 @@ function appendJsonLine(filePath, payload = {}) {
 }
 
 // ========================================================
+// NORMALIZACIÓN DE EVENTOS
+// ========================================================
+function normalizeEventType(payload = {}) {
+  const normalizedPayload = { ...payload };
+
+  if (!normalizedPayload.type && normalizedPayload.event_type) {
+    const legacyMap = {
+      flow_step: "entry",
+      lead_profile_completed: "qualified",
+      cta_meeting_selected: "cta_click",
+      cta_whatsapp_selected: "cta_click",
+      callback_requested: "conversion_intent"
+    };
+
+    normalizedPayload.type = legacyMap[normalizedPayload.event_type] || null;
+  }
+
+  return normalizedPayload;
+}
+
+function isAllowedLeadEvent(payload = {}) {
+  return Boolean(payload.type) && ALLOWED_LEAD_EVENTS.includes(payload.type);
+}
+
+// ========================================================
 // LOGS PRINCIPALES
 // ========================================================
 function logLeadEvent(payload = {}) {
   try {
-    const record = buildRecord(payload);
+    const normalizedPayload = normalizeEventType(payload);
 
-    // 🔥 LOG EN TIEMPO REAL PARA RAILWAY
+    if (!isAllowedLeadEvent(normalizedPayload)) {
+      return;
+    }
+
+    const record = buildRecord(normalizedPayload);
+
     console.log("[LEAD_EVENT]", JSON.stringify(record));
-
-    appendJsonLine(leadsLogPath, payload);
+    appendJsonLine(leadsLogPath, normalizedPayload);
   } catch (err) {
     console.error("[LOGGER_ERROR] logLeadEvent fallo:", err.message);
   }
@@ -86,9 +125,7 @@ function logErrorEvent(payload = {}) {
   try {
     const record = buildRecord(payload);
 
-    // 🔥 LOG EN TIEMPO REAL PARA RAILWAY
     console.error("[ERROR_EVENT]", JSON.stringify(record));
-
     appendJsonLine(errorsLogPath, payload);
   } catch (err) {
     console.error("[LOGGER_ERROR] logErrorEvent fallo:", err.message);
