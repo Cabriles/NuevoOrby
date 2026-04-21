@@ -149,12 +149,20 @@ function highlightDecisionLead(text = "") {
     /^El punto clave/i,
     /^Aquí lo importante/i,
     /^Aquí tendría sentido/i,
-    /^Aquí lo más útil/i
+    /^Aquí lo más útil/i,
+    /^Conviene/i,
+    /^Vale la pena/i,
+    /^La prioridad aquí es/i,
+    /^El riesgo aquí es/i,
+    /^Primero hay que/i,
+    /^En este punto/i,
+    /^Lo importante aquí es/i,
+    /^El punto clave aquí es/i
   ];
 
   for (const pattern of patterns) {
     if (pattern.test(clean)) {
-      return bold(clean); // 🔥 ahora resalta TODA la frase
+      return bold(clean);
     }
   }
 
@@ -421,42 +429,42 @@ function buildSecondTurnAnchor(userMessage = "") {
   const clean = String(userMessage || "").trim().toLowerCase();
 
   if (!clean) {
-    return highlightDecisionLead("Aquí ya conviene bajar esto a una decisión más puntual para que el siguiente ajuste tenga impacto real.");
+    return highlightDecisionLead("En este punto vale la pena bajar esto a una decisión más puntual para que el siguiente ajuste tenga impacto real.");
   }
 
   if (clean.includes("landing") || clean.includes("pagina") || clean.includes("página")) {
-    return highlightDecisionLead("Si hoy la fricción está en la página o landing, entonces no conviene seguir enviando tráfico sin revisar primero cómo estás presentando la oferta y guiando la acción.");
+    return highlightDecisionLead("La prioridad aquí es revisar primero cómo estás presentando la oferta y guiando la acción antes de seguir enviando tráfico.");
   }
 
   if (clean.includes("checkout") || clean.includes("carrito")) {
-    return highlightDecisionLead("Si el punto débil está en carrito o checkout, entonces el foco debería estar en reducir fricción, simplificar el proceso y evitar abandonos innecesarios.");
+    return highlightDecisionLead("El punto clave aquí es reducir fricción, simplificar el proceso y evitar abandonos innecesarios.");
   }
 
   if (clean.includes("precio") || clean.includes("promoc")) {
-    return highlightDecisionLead("Si la duda principal está en precios o promociones, entonces conviene revisar cómo se percibe el valor antes de tocar descuentos a ciegas.");
+    return highlightDecisionLead("El riesgo aquí es tocar precios antes de corregir cómo se percibe el valor.");
   }
 
   if (clean.includes("trafico") || clean.includes("tráfico")) {
-    return highlightDecisionLead("Si el problema hoy está en el tráfico, entonces hay que separar si falta volumen, si falta intención o si el recorrido posterior no está convirtiendo bien.");
+    return highlightDecisionLead("La prioridad aquí es separar si falta volumen, si falta intención o si el recorrido posterior no está convirtiendo bien.");
   }
 
   if (clean.includes("google") || clean.includes("seo")) {
-    return highlightDecisionLead("Si el foco está en Google o SEO, entonces conviene trabajar visibilidad con intención comercial, no solo contenido por publicar.");
+    return highlightDecisionLead("Lo importante aquí es trabajar visibilidad con intención comercial, no solo contenido por publicar.");
   }
 
   if (clean.includes("redes") || clean.includes("contenido")) {
-    return highlightDecisionLead("Si el reto está en redes o contenido, entonces la clave no es publicar más por publicar, sino conectar mejor mensaje, propuesta y conversión.");
+    return highlightDecisionLead("El punto clave aquí es conectar mejor mensaje, propuesta y conversión, no publicar más por publicar.");
   }
 
   if (clean.includes("whatsapp") || clean.includes("seguimiento")) {
-    return highlightDecisionLead("Si el problema está en WhatsApp o seguimiento, entonces conviene ordenar mejor la respuesta, la secuencia y el criterio de avance comercial.");
+    return highlightDecisionLead("La prioridad aquí es ordenar mejor la respuesta, la secuencia y el criterio de avance comercial.");
   }
 
   if (clean.includes("formulario") || clean.includes("crm") || clean.includes("embudo")) {
-    return highlightDecisionLead("Si el reto está en formularios, CRM o embudo, entonces el punto importante es que la captura y el seguimiento trabajen como un sistema y no como piezas sueltas.");
+    return highlightDecisionLead("Lo importante aquí es que la captura y el seguimiento trabajen como un sistema y no como piezas sueltas.");
   }
 
-  return highlightDecisionLead("Aquí conviene aterrizar mejor ese punto para que el ajuste no se quede en intuición, sino en criterio comercial real.");
+  return highlightDecisionLead("La prioridad aquí es aterrizar mejor ese punto para que el ajuste no se quede en intuición, sino en criterio comercial real.");
 }
 
 function buildSecondTurnImplementationDetail(user, userMessage = "") {
@@ -464,87 +472,87 @@ function buildSecondTurnImplementationDetail(user, userMessage = "") {
 
   if (user.ecommerce_rama === "crear_tienda") {
     if (user.ecommerce_necesidad === "crear_desde_cero") {
-      return "Aquí conviene definir primero una estructura clara de oferta, recorrido y conversión para que la tienda arranque con lógica comercial y no solo técnica.";
+      return "Primero hay que definir una estructura clara de oferta, recorrido y conversión para que la tienda arranque con lógica comercial y no solo técnica.";
     }
 
     if (user.ecommerce_necesidad === "configurar_estructura") {
       if (msg.includes("pago")) {
-        return "Aquí lo importante sería dejar el cobro claro y sin fricción para no afectar confianza ni cierre desde el arranque.";
+        return "Lo importante aquí es dejar el cobro claro y sin fricción para no afectar confianza ni cierre desde el arranque.";
       }
 
       if (msg.includes("logist") || msg.includes("envio")) {
-        return "Aquí conviene ordenar bien la parte operativa y de entrega para que la promesa comercial se sostenga en la experiencia real.";
+        return "La prioridad aquí es ordenar bien la parte operativa y de entrega para que la promesa comercial se sostenga en la experiencia real.";
       }
 
-      return "Aquí conviene dejar bien resuelta la base operativa para que la tienda funcione mejor al momento de vender.";
+      return "Primero hay que dejar bien resuelta la base operativa para que la tienda funcione mejor al momento de vender.";
     }
 
     if (user.ecommerce_necesidad === "redisenar_actualizar") {
-      return "Aquí tendría sentido identificar si el ajuste debe mejorar percepción, claridad o rendimiento para no hacer cambios visuales que no resuelvan el freno real.";
+      return "El punto clave aquí es identificar si el ajuste debe mejorar percepción, claridad o rendimiento para no hacer cambios visuales que no resuelvan el freno real.";
     }
   }
 
   if (user.ecommerce_rama === "mejorar_resultados") {
     if (user.ecommerce_contexto === "oferta_propuesta") {
       if (msg.includes("precio") || msg.includes("promoc")) {
-        return "Lo importante aquí es no bajar precios sin corregir la propuesta, porque eso puede afectar margen sin mejorar conversión. Primero hay que asegurar que el valor esté bien percibido antes de ajustar precios.";
+        return "El riesgo aquí es bajar precios sin corregir la propuesta, porque eso puede afectar margen sin mejorar conversión. Primero hay que asegurar que el valor esté bien percibido antes de ajustar precios.";
       }
 
-      return "Lo importante sería hacer más clara y deseable la propuesta para que sea más fácil convertir.";
+      return "Lo importante aquí es hacer más clara y deseable la propuesta para que sea más fácil convertir.";
     }
 
     if (user.ecommerce_contexto === "pagina_carrito_checkout") {
       if (msg.includes("checkout") || msg.includes("carrito")) {
-        return "Aquí conviene simplificar pasos y reducir fricción para evitar que la intención se enfríe antes del cierre.";
+        return "La prioridad aquí es simplificar pasos y reducir fricción para evitar que la intención se enfríe antes del cierre.";
       }
 
-      return "Aquí tendría sentido revisar el recorrido completo para conectar mejor navegación, oferta y acción.";
+      return "En este punto vale la pena revisar el recorrido completo para conectar mejor navegación, oferta y acción.";
     }
 
     if (user.ecommerce_contexto === "confianza_seguimiento") {
       if (msg.includes("whatsapp") || msg.includes("seguimiento")) {
-        return "Aquí lo más útil sería ordenar mejor el seguimiento comercial para que el interés no se pierda después del primer contacto.";
+        return "En este punto vale la pena ordenar mejor el seguimiento comercial para que el interés no se pierda después del primer contacto.";
       }
 
-      return "Aquí conviene reforzar credibilidad y recuperación para no depender solo del impulso inicial del usuario.";
+      return "Lo importante aquí es reforzar credibilidad y recuperación para no depender solo del impulso inicial del usuario.";
     }
   }
 
   if (user.ecommerce_rama === "conseguir_trafico") {
     if (user.ecommerce_necesidad === "publicidad_digital") {
       if (msg.includes("trafico") || msg.includes("tráfico")) {
-        return "Aquí conviene separar si falta volumen o si falta calidad del tráfico antes de meter más presupuesto.";
+        return "La prioridad aquí es separar si falta volumen o si falta calidad del tráfico antes de meter más presupuesto.";
       }
 
-      return "Aquí lo importante sería ordenar mejor objetivo, mensaje y tipo de campaña para atraer tráfico con más intención.";
+      return "Lo importante aquí es ordenar mejor objetivo, mensaje y tipo de campaña para atraer tráfico con más intención.";
     }
 
     if (user.ecommerce_necesidad === "contenido_posicionamiento") {
       if (msg.includes("google") || msg.includes("seo")) {
-        return "Aquí conviene trabajar visibilidad con intención comercial para aparecer donde la búsqueda ya está más cerca de una necesidad real.";
+        return "La prioridad aquí es trabajar visibilidad con intención comercial para aparecer donde la búsqueda ya está más cerca de una necesidad real.";
       }
 
       if (msg.includes("redes") || msg.includes("contenido")) {
-        return "Aquí tendría sentido ordenar una línea de contenidos más conectada con la oferta y con una acción concreta.";
+        return "En este punto vale la pena ordenar una línea de contenidos más conectada con la oferta y con una acción concreta.";
       }
 
-      return "Aquí conviene conectar mejor visibilidad y conversión para que el contenido no se quede solo en alcance.";
+      return "Lo importante aquí es conectar mejor visibilidad y conversión para que el contenido no se quede solo en alcance.";
     }
 
     if (user.ecommerce_necesidad === "automatizacion_seguimiento") {
       if (msg.includes("whatsapp") || msg.includes("seguimiento")) {
-        return "Aquí lo más útil sería diseñar una secuencia más clara de respuesta y seguimiento para que los prospectos no se enfríen.";
+        return "La prioridad aquí es diseñar una secuencia más clara de respuesta y seguimiento para que los prospectos no se enfríen.";
       }
 
       if (msg.includes("formulario") || msg.includes("crm") || msg.includes("embudo")) {
-        return "Aquí conviene integrar mejor captura, clasificación y seguimiento para que el proceso comercial no quede fragmentado.";
+        return "Lo importante aquí es integrar mejor captura, clasificación y seguimiento para que el proceso comercial no quede fragmentado.";
       }
 
-      return "Aquí tendría sentido automatizar mejor la respuesta y el seguimiento para que la captación no dependa de acciones manuales desordenadas.";
+      return "En este punto vale la pena automatizar mejor la respuesta y el seguimiento para que la captación no dependa de acciones manuales desordenadas.";
     }
   }
 
-  return "Aquí conviene aterrizar mejor ese punto para que el siguiente paso sea más claro y más conectado con resultados reales.";
+  return "La prioridad aquí es aterrizar mejor ese punto para que el siguiente paso sea más claro y más conectado con resultados reales.";
 }
 
 function buildStrongSecondTurnFallback(user, userMessage) {
