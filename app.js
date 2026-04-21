@@ -175,6 +175,31 @@ function buildUnknownMessage() {
 ${getMainMenu()}`;
 }
 
+function isGreetingMessage(text = "") {
+  const value = normalizeText(text);
+
+  const greetings = [
+    "hola",
+    "hola!",
+    "hola.",
+    "holi",
+    "buenas",
+    "buenos dias",
+    "buen día",
+    "buen dia",
+    "buenas tardes",
+    "buenas noches",
+    "hello",
+    "hi",
+    "hey",
+    "que tal",
+    "qué tal",
+    "saludos"
+  ];
+
+  return greetings.includes(value);
+}
+
 function detectDirectCampaignModule(rawMessage = "") {
   const text = normalizeText(rawMessage);
 
