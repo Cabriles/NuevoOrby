@@ -422,87 +422,87 @@ function buildSecondTurnImplementationDetail(user, userMessage = "") {
 
   if (user.ecommerce_rama === "crear_tienda") {
     if (user.ecommerce_necesidad === "crear_desde_cero") {
-      return "Aquí tendría sentido definir primero una estructura clara de oferta, recorrido y conversión para que la tienda no nazca técnicamente montada pero comercialmente débil.";
+      return "Aquí conviene definir primero una estructura clara de oferta, recorrido y conversión para que la tienda arranque con lógica comercial y no solo técnica.";
     }
 
     if (user.ecommerce_necesidad === "configurar_estructura") {
       if (msg.includes("pago")) {
-        return "Aquí conviene dejar resuelto el cobro con claridad y sin fricción, porque una mala configuración de pagos suele afectar confianza y cierre desde el arranque.";
+        return "Aquí lo importante sería dejar el cobro claro y sin fricción para no afectar confianza ni cierre desde el arranque.";
       }
 
       if (msg.includes("logist") || msg.includes("envio")) {
-        return "Aquí lo importante sería ordenar bien la parte operativa y de entrega para que la promesa comercial no choque con la experiencia real del cliente.";
+        return "Aquí conviene ordenar bien la parte operativa y de entrega para que la promesa comercial se sostenga en la experiencia real.";
       }
 
-      return "Aquí conviene resolver bien la base operativa para que la tienda no solo se vea lista, sino que funcione mejor al momento de vender.";
+      return "Aquí conviene dejar bien resuelta la base operativa para que la tienda funcione mejor al momento de vender.";
     }
 
     if (user.ecommerce_necesidad === "redisenar_actualizar") {
-      return "Aquí lo más útil sería identificar si el rediseño debe mejorar percepción, claridad o rendimiento, porque cambiar estética sin corregir el freno real suele dejar el problema intacto.";
+      return "Aquí tendría sentido identificar si el ajuste debe mejorar percepción, claridad o rendimiento para no hacer cambios visuales que no resuelvan el freno real.";
     }
   }
 
   if (user.ecommerce_rama === "mejorar_resultados") {
     if (user.ecommerce_contexto === "oferta_propuesta") {
       if (msg.includes("precio") || msg.includes("promoc")) {
-        return "Aquí tendría sentido revisar si el precio está comunicado con suficiente valor, porque bajar precio sin ajustar percepción o propuesta rara vez resuelve el fondo del problema.";
+        return "Aquí conviene revisar cómo se percibe el valor antes de tocar descuentos, para no bajar precio sin corregir la propuesta.";
       }
 
-      return "Aquí conviene revisar cómo presentas lo que vendes para que la propuesta sea más clara, más deseable y más fácil de convertir.";
+      return "Aquí lo importante sería hacer más clara y deseable la propuesta para que sea más fácil convertir.";
     }
 
     if (user.ecommerce_contexto === "pagina_carrito_checkout") {
       if (msg.includes("checkout") || msg.includes("carrito")) {
-        return "Aquí lo más útil sería simplificar pasos, eliminar fricción y revisar qué está haciendo que la intención se enfríe antes del cierre.";
+        return "Aquí conviene simplificar pasos y reducir fricción para evitar que la intención se enfríe antes del cierre.";
       }
 
-      return "Aquí conviene revisar el recorrido completo para que la navegación, la oferta y la acción estén mejor conectadas y sea más fácil cerrar.";
+      return "Aquí tendría sentido revisar el recorrido completo para conectar mejor navegación, oferta y acción.";
     }
 
     if (user.ecommerce_contexto === "confianza_seguimiento") {
       if (msg.includes("whatsapp") || msg.includes("seguimiento")) {
-        return "Aquí tendría sentido ordenar mejor el seguimiento comercial para que el interés no se pierda después del primer contacto y exista una secuencia más clara de avance.";
+        return "Aquí lo más útil sería ordenar mejor el seguimiento comercial para que el interés no se pierda después del primer contacto.";
       }
 
-      return "Aquí conviene reforzar credibilidad, seguimiento y recuperación para que la tienda no dependa solo del impulso inicial del usuario.";
+      return "Aquí conviene reforzar credibilidad y recuperación para no depender solo del impulso inicial del usuario.";
     }
   }
 
   if (user.ecommerce_rama === "conseguir_trafico") {
     if (user.ecommerce_necesidad === "publicidad_digital") {
       if (msg.includes("trafico") || msg.includes("tráfico")) {
-        return "Aquí conviene revisar si el problema es volumen o calidad del tráfico, porque meter más presupuesto sobre una campaña mal orientada solo acelera el desperdicio.";
+        return "Aquí conviene separar si falta volumen o si falta calidad del tráfico antes de meter más presupuesto.";
       }
 
-      return "Aquí tendría sentido ordenar mejor objetivo, mensaje y tipo de campaña para que la inversión empiece a traer tráfico con más intención.";
+      return "Aquí lo importante sería ordenar mejor objetivo, mensaje y tipo de campaña para atraer tráfico con más intención.";
     }
 
     if (user.ecommerce_necesidad === "contenido_posicionamiento") {
       if (msg.includes("google") || msg.includes("seo")) {
-        return "Aquí conviene trabajar visibilidad con intención comercial, buscando aparecer donde el usuario ya está más cerca de una necesidad real.";
+        return "Aquí conviene trabajar visibilidad con intención comercial para aparecer donde la búsqueda ya está más cerca de una necesidad real.";
       }
 
       if (msg.includes("redes") || msg.includes("contenido")) {
-        return "Aquí lo más útil sería ordenar una línea de contenidos más conectada con la oferta y con el avance del usuario hacia una acción concreta.";
+        return "Aquí tendría sentido ordenar una línea de contenidos más conectada con la oferta y con una acción concreta.";
       }
 
-      return "Aquí tendría sentido conectar mejor visibilidad y conversión para que el contenido no se quede solo en alcance o presencia.";
+      return "Aquí conviene conectar mejor visibilidad y conversión para que el contenido no se quede solo en alcance.";
     }
 
     if (user.ecommerce_necesidad === "automatizacion_seguimiento") {
       if (msg.includes("whatsapp") || msg.includes("seguimiento")) {
-        return "Aquí conviene diseñar una secuencia más clara de respuesta y seguimiento para que los prospectos no se enfríen entre el contacto inicial y la decisión.";
+        return "Aquí lo más útil sería diseñar una secuencia más clara de respuesta y seguimiento para que los prospectos no se enfríen.";
       }
 
       if (msg.includes("formulario") || msg.includes("crm") || msg.includes("embudo")) {
-        return "Aquí lo importante sería integrar mejor captura, clasificación y seguimiento para que el proceso comercial no quede fragmentado.";
+        return "Aquí conviene integrar mejor captura, clasificación y seguimiento para que el proceso comercial no quede fragmentado.";
       }
 
       return "Aquí tendría sentido automatizar mejor la respuesta y el seguimiento para que la captación no dependa de acciones manuales desordenadas.";
     }
   }
 
-  return "Aquí conviene aterrizar mejor ese punto para que el siguiente paso sea más claro, más útil y más conectado con resultados reales.";
+  return "Aquí conviene aterrizar mejor ese punto para que el siguiente paso sea más claro y más conectado con resultados reales.";
 }
 
 function buildStrongSecondTurnFallback(user, userMessage) {
@@ -511,7 +511,7 @@ function buildStrongSecondTurnFallback(user, userMessage) {
 
   return `${anchor}
 
-${detail} Ahí es donde OneOrbix puede ayudarte a bajar esto a una decisión más clara, con criterio comercial y una implementación más útil.`;
+${detail}`;
 }
 
 // ========================================================
@@ -646,7 +646,10 @@ function maybeReinforceSecondTurnBeforeCTA(text = "", user, userMessage = "") {
     clean = stripTrailingQuestionParagraphs(clean).trim();
   }
 
-  if (countWords(clean) < 48) {
+  if (
+    countWords(clean) < 26 ||
+    !containsAnyKeyword(clean, ["conviene", "clave", "importante", "ordenar", "mejorar"])
+  ) {
     clean = buildStrongSecondTurnFallback(user, userMessage);
   }
 
