@@ -51,6 +51,11 @@ const {
   getAtencionIntro
 } = require("./services/flows/atencion");
 
+const {
+  logLeadEvent,
+  logErrorEvent
+} = require("./services/logger");
+
 // ========================================================
 // CONFIG
 // ========================================================
@@ -188,7 +193,7 @@ function isHighIntentAmazon(message = "") {
     "iniciar"
   ];
 
-  return triggers.some(t => msg.includes(t));
+  return triggers.some((t) => msg.includes(t));
 }
 
 function isGreetingMessage(text = "") {
@@ -221,23 +226,20 @@ function detectDirectCampaignModule(rawMessage = "") {
 
   const directTriggers = {
     amazon: [
-  // intención general
-  "amazon",
-  "amazon fba",
-  "vender en amazon",
-  "quiero vender en amazon",
-  "necesito mas informacion sobre amazon fba",
-  "necesito más información sobre amazon fba",
-
-  // intención comercial (clave)
-  "membresia amazon",
-  "membresía amazon",
-  "curso amazon",
-  "programa amazon",
-  "quiero empezar en amazon",
-  "quiero vender ya en amazon",
-  "como empiezo en amazon"
-],
+      "amazon",
+      "amazon fba",
+      "vender en amazon",
+      "quiero vender en amazon",
+      "necesito mas informacion sobre amazon fba",
+      "necesito más información sobre amazon fba",
+      "membresia amazon",
+      "membresía amazon",
+      "curso amazon",
+      "programa amazon",
+      "quiero empezar en amazon",
+      "quiero vender ya en amazon",
+      "como empiezo en amazon"
+    ],
 
     importacion: [
       "importar",
@@ -310,6 +312,77 @@ function resolveDirectModuleState(moduleKey) {
 }
 
 // ========================================================
+// HELPERS DE TRACKING
+// ========================================================
+function safeLogLeadEvent(payload = {}) {
+  try {
+    logLeadEvent(payload);
+  } catch (error) {
+    console.error("Error al registrar lead event:", error);
+  }
+}
+
+function safeLogErrorEvent(payload = {}) {
+  try {
+    logErrorEvent(payload);
+  } catch (error) {
+    console.error("Error al registrar error event:", error);
+  }
+}
+
+function trackStateTransition({
+  phone,
+  userBefore = {},
+  userAfter = {},
+  moduleKey = null,
+  message = "",
+  source = "backend",
+  context = "state_transition"
+}) {
+  const fromState = userBefore?.estado || null;
+  const toState = userAfter?.estado || null;
+  const fromScore = Number(userBefore?.score || 0);
+  const toScore = Number(userAfter?.score || 0);
+
+  const stateChanged = fromState !== toState;
+  const scoreChanged = fromScore !== toScore;
+
+  if (stateChanged || scoreChanged) {
+    safeLogLeadEvent({
+      type: "state_change",
+      context,
+      phone,
+      module: moduleKey || getStateModule(userAfter) || getStateModule(userBefore),
+      from_state: fromState,
+      to_state: toState,
+      from_score: fromScore,
+      to_score: toScore,
+      lead_type: classifyLead(userAfter),
+      source,
+      message
+    });
+  }
+
+  const enteredLeadState =
+    !isLeadState(fromState) &&
+    isLeadState(toState);
+
+  if (enteredLeadState) {
+    safeLogLeadEvent({
+      type: "lead_classified",
+      context,
+      phone,
+      module: moduleKey || getStateModule(userAfter) || getStateModule(userBefore),
+      estado: toState,
+      score: toScore,
+      lead_type: classifyLead(userAfter),
+      source,
+      message
+    });
+  }
+}
+
+// ========================================================
 // DISPATCH A FLOWS
 // ========================================================
 async function dispatchToModuleFlow({
@@ -361,7 +434,20 @@ async function dispatchToModuleFlow({
 // ========================================================
 function handleGlobalCommands({ user, phone, rawMessage }) {
   if (isResetCommand(rawMessage)) {
-    resetUser(phone);
+    const userBefore = { ...user };
+
+    const resetedUser = resetUser(phone);
+
+    safeLogLeadEvent({
+      type: "global_command",
+      command: "reiniciar",
+      phone,
+      message: rawMessage,
+      from_state: userBefore?.estado || null,
+      to_state: resetedUser?.estado || null,
+      lead_type: classifyLead(resetedUser),
+      source: "backend"
+    });
 
     return buildResponseWithNavigation(
       `Perfecto. Empecemos de nuevo.
@@ -374,9 +460,22 @@ ${buildWelcomeMenu()}`,
 
   if (isMenuCommand(rawMessage)) {
     const currentUser = getOrCreateUser(phone);
+    const userBefore = { ...currentUser };
+
     currentUser.estado = null;
     currentUser.interes_principal = null;
-    saveUser(phone, currentUser);
+    const updatedUser = saveUser(phone, currentUser);
+
+    safeLogLeadEvent({
+      type: "global_command",
+      command: "menu",
+      phone,
+      message: rawMessage,
+      from_state: userBefore?.estado || null,
+      to_state: updatedUser?.estado || null,
+      lead_type: classifyLead(updatedUser),
+      source: "backend"
+    });
 
     return buildResponseWithNavigation(
       buildWelcomeMenu(),
@@ -390,6 +489,19 @@ ${buildWelcomeMenu()}`,
     const fallbackState = getPreviousStateFallback(moduleKey);
 
     if (!fallbackState) {
+      safeLogLeadEvent({
+        type: "global_command",
+        command: "atras",
+        phone,
+        message: rawMessage,
+        from_state: user?.estado || null,
+        to_state: null,
+        module: moduleKey,
+        lead_type: classifyLead(user),
+        source: "backend",
+        fallback_to_menu: true
+      });
+
       return buildResponseWithNavigation(
         buildWelcomeMenu(),
         { source: "backend" },
@@ -397,9 +509,23 @@ ${buildWelcomeMenu()}`,
       );
     }
 
+    const userBefore = { ...user };
+
     user.estado = fallbackState;
     user.interes_principal = moduleKey;
-    saveUser(phone, user);
+    const updatedUser = saveUser(phone, user);
+
+    safeLogLeadEvent({
+      type: "global_command",
+      command: "atras",
+      phone,
+      message: rawMessage,
+      module: moduleKey,
+      from_state: userBefore?.estado || null,
+      to_state: updatedUser?.estado || fallbackState,
+      lead_type: classifyLead(updatedUser),
+      source: "backend"
+    });
 
     return buildResponseWithNavigation(
       getModuleIntroByKey(moduleKey),
@@ -415,25 +541,41 @@ ${buildWelcomeMenu()}`,
 // ENTRADA A MÓDULO
 // ========================================================
 function handleModuleEntry({ user, phone, rawMessage }) {
-const directModule = detectDirectCampaignModule(rawMessage);
+  const directModule = detectDirectCampaignModule(rawMessage);
+  const safeModule = directModule === "club" ? "atencion" : directModule;
 
-const safeModule = directModule === "club" ? "atencion" : directModule;
-
-if (safeModule === "amazon") {
-  if (isHighIntentAmazon(rawMessage)) {
-    user.amazon_high_intent = true;
-    saveUser(phone, user);
+  if (safeModule === "amazon") {
+    if (isHighIntentAmazon(rawMessage)) {
+      user.amazon_high_intent = true;
+      saveUser(phone, user);
+    }
   }
-}
 
   if (directModule) {
     const initialState = resolveDirectModuleState(directModule);
 
     if (!initialState) return null;
 
+    const userBefore = { ...user };
+
     user.estado = initialState;
     user.interes_principal = directModule === "club" ? "atencion" : directModule;
-    saveUser(phone, user);
+    const updatedUser = saveUser(phone, user);
+
+    safeLogLeadEvent({
+      type: "module_entry",
+      phone,
+      module: directModule === "club" ? "atencion" : directModule,
+      original_module: directModule,
+      entry_state: initialState,
+      from_state: userBefore?.estado || null,
+      to_state: updatedUser?.estado || initialState,
+      lead_type: classifyLead(updatedUser),
+      message: rawMessage,
+      matched_intent: "direct_campaign_entry",
+      via: "direct_trigger",
+      source: "backend"
+    });
 
     return buildResponseWithNavigation(
       getModuleIntroByKey(directModule === "club" ? "atencion" : directModule),
@@ -451,9 +593,25 @@ if (safeModule === "amazon") {
 
   if (!entry) return null;
 
+  const userBefore = { ...user };
+
   user.estado = entry.estado_inicial;
   user.interes_principal = entry.module;
-  saveUser(phone, user);
+  const updatedUser = saveUser(phone, user);
+
+  safeLogLeadEvent({
+    type: "module_entry",
+    phone,
+    module: entry.module,
+    entry_state: entry.estado_inicial,
+    from_state: userBefore?.estado || null,
+    to_state: updatedUser?.estado || entry.estado_inicial,
+    lead_type: classifyLead(updatedUser),
+    message: rawMessage,
+    matched_intent: entry.intent,
+    via: entry.via,
+    source: "backend"
+  });
 
   return buildResponseWithNavigation(
     getModuleIntroByKey(entry.module),
@@ -498,9 +656,21 @@ async function processIncomingMessage({
 
     // 1.1 Saludo simple sin estado activo -> bienvenida UX
     if ((!user.estado || user.estado === "finalizado") && isGreetingMessage(rawMessage)) {
+      const userBefore = { ...user };
+
       user.estado = null;
       user.interes_principal = null;
-      saveUser(phone, user);
+      const updatedUser = saveUser(phone, user);
+
+      safeLogLeadEvent({
+        type: "greeting_entry",
+        phone,
+        from_state: userBefore?.estado || null,
+        to_state: updatedUser?.estado || null,
+        lead_type: classifyLead(updatedUser),
+        message: rawMessage,
+        source: "backend"
+      });
 
       return buildResponseWithNavigation(
         buildGreetingWelcomeMessage(),
@@ -532,6 +702,14 @@ async function processIncomingMessage({
         return moduleEntryResponse;
       }
 
+      safeLogLeadEvent({
+        type: "unknown_entry",
+        phone,
+        message: rawMessage,
+        source: "backend",
+        lead_type: classifyLead(user)
+      });
+
       return buildResponseWithNavigation(
         buildUnknownMessage(),
         { source: "backend" },
@@ -543,12 +721,26 @@ async function processIncomingMessage({
     const currentModule = getStateModule(user);
 
     if (currentModule) {
+      const userBeforeFlow = { ...user };
+
       const flowResponse = await dispatchToModuleFlow({
         moduleKey: currentModule,
         user,
         phone,
         cleanMessage,
         message: rawMessage
+      });
+
+      const userAfterFlow = getOrCreateUser(phone) || user;
+
+      trackStateTransition({
+        phone,
+        userBefore: userBeforeFlow,
+        userAfter: userAfterFlow,
+        moduleKey: currentModule,
+        message: rawMessage,
+        source: flowResponse?.source || "backend",
+        context: "flow_dispatch"
       });
 
       if (flowResponse?.reply) {
@@ -558,13 +750,24 @@ async function processIncomingMessage({
             source: flowResponse.source || "backend",
             module: currentModule
           },
-          user.estado
+          userAfterFlow.estado
         );
       }
     }
 
     // 5. Si está en lead state pero no resolvió por flow, insistir con CTA o volver a menú
     if (isLeadState(user.estado)) {
+      safeLogLeadEvent({
+        type: "lead_state_fallback",
+        phone,
+        module: getStateModule(user),
+        estado: user.estado,
+        score: Number(user.score || 0),
+        lead_type: classifyLead(user),
+        message: rawMessage,
+        source: "backend"
+      });
+
       return buildResponse(
         "Puedo seguir ayudándote dentro de este caso o, si prefieres, escribe MENU para volver al menú principal.",
         { source: "backend" }
@@ -572,6 +775,17 @@ async function processIncomingMessage({
     }
 
     // 6. Fallback final
+    safeLogLeadEvent({
+      type: "fallback_unknown_message",
+      phone,
+      module: getStateModule(user),
+      estado: user.estado || null,
+      score: Number(user.score || 0),
+      lead_type: classifyLead(user),
+      message: rawMessage,
+      source: "backend"
+    });
+
     return buildResponseWithNavigation(
       buildUnknownMessage(),
       { source: "backend" },
@@ -579,6 +793,14 @@ async function processIncomingMessage({
     );
   } catch (error) {
     console.error("Error en processIncomingMessage:", error);
+
+    safeLogErrorEvent({
+      type: "process_incoming_message_error",
+      phone: phone || null,
+      message: message || null,
+      error_message: error?.message || "unknown_error",
+      stack: error?.stack || null
+    });
 
     return buildResponse(
       "Hubo un problema al procesar tu mensaje. Inténtalo nuevamente.",
@@ -676,6 +898,16 @@ async function handleWebhookPayload(payload = {}) {
     };
   } catch (error) {
     console.error("Error en handleWebhookPayload:", error);
+
+    safeLogErrorEvent({
+      type: "handle_webhook_payload_error",
+      error_message: error?.message || "unknown_error",
+      stack: error?.stack || null,
+      payload_preview: {
+        has_entry: Boolean(payload?.entry),
+        object: payload?.object || null
+      }
+    });
 
     return {
       reply: null,

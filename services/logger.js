@@ -17,14 +17,47 @@ function ensureLogsDir() {
   }
 }
 
+function sanitizeValue(value) {
+  if (value instanceof Error) {
+    return {
+      name: value.name,
+      message: value.message,
+      stack: value.stack || null
+    };
+  }
+
+  if (typeof value === "bigint") {
+    return value.toString();
+  }
+
+  if (Array.isArray(value)) {
+    return value.map(sanitizeValue);
+  }
+
+  if (value && typeof value === "object") {
+    const output = {};
+
+    for (const [key, nestedValue] of Object.entries(value)) {
+      output[key] = sanitizeValue(nestedValue);
+    }
+
+    return output;
+  }
+
+  return value;
+}
+
+function buildRecord(payload = {}) {
+  return {
+    timestamp: new Date().toISOString(),
+    ...sanitizeValue(payload)
+  };
+}
+
 function appendJsonLine(filePath, payload = {}) {
   ensureLogsDir();
 
-  const record = {
-    timestamp: new Date().toISOString(),
-    ...payload
-  };
-
+  const record = buildRecord(payload);
   fs.appendFileSync(filePath, JSON.stringify(record) + "\n", "utf8");
 }
 
