@@ -91,7 +91,9 @@ function getStandardCTA() {
 }
 
 function buildHybridReply(aiReply, withCTA = false) {
-  const cleanReply = String(aiReply || "").trim();
+  let cleanReply = String(aiReply || "").trim();
+
+  cleanReply = highlightBrand(cleanReply);
 
   if (withCTA) {
     return `${cleanReply}
@@ -117,6 +119,41 @@ function buildMeetingReply(CALENDLY_LINK) {
 ${CALENDLY_LINK}
 
 Cuando la reserves, ya tendremos una base más clara para revisar tu caso.`;
+}
+
+function bold(text = "") {
+  const clean = String(text || "").trim();
+  if (!clean) return "";
+  if (clean.startsWith("*") && clean.endsWith("*")) return clean;
+  return `*${clean}*`;
+}
+
+function highlightBrand(text = "") {
+  return String(text || "").replace(/\bOneOrbix\b/g, "*OneOrbix*");
+}
+
+function highlightDecisionLead(text = "") {
+  const clean = String(text || "").trim();
+  if (!clean) return clean;
+
+  const patterns = [
+    /^Aquí conviene/i,
+    /^Lo importante/i,
+    /^El punto clave/i,
+    /^Aquí lo importante/i,
+    /^Aquí tendría sentido/i,
+    /^Aquí lo más útil/i
+  ];
+
+  for (const pattern of patterns) {
+    const match = clean.match(pattern);
+    if (match) {
+      const lead = match[0];
+      return clean.replace(lead, bold(lead));
+    }
+  }
+
+  return clean;
 }
 
 // ========================================================
@@ -300,49 +337,49 @@ function buildEcommercePriority(user) {
 function buildFirstTurnQuestion(user) {
   if (user.ecommerce_rama === "crear_tienda") {
     if (user.ecommerce_necesidad === "crear_desde_cero") {
-      return "Para orientarte mejor, dime qué te preocupa más hoy: empezar con buena estructura, elegir bien la plataforma o no cometer errores desde el inicio?";
+      return bold("Para orientarte mejor, dime qué te preocupa más hoy: empezar con buena estructura, elegir bien la plataforma o no cometer errores desde el inicio?");
     }
 
     if (user.ecommerce_necesidad === "configurar_estructura") {
-      return "Para afinar la recomendación, dime qué necesitas resolver primero: pagos, logística o dejar mejor organizado el catálogo?";
+      return bold("Para afinar la recomendación, dime qué necesitas resolver primero: pagos, logística o dejar mejor organizado el catálogo?");
     }
 
     if (user.ecommerce_necesidad === "redisenar_actualizar") {
-      return "Para aterrizarlo mejor, dime qué te pesa más hoy: imagen visual, parte técnica o velocidad y rendimiento?";
+      return bold("Para aterrizarlo mejor, dime qué te pesa más hoy: imagen visual, parte técnica o velocidad y rendimiento?");
     }
   }
 
   if (user.ecommerce_rama === "mejorar_resultados") {
     if (user.ecommerce_contexto === "oferta_propuesta") {
-      return "Para afinar la recomendación, dime qué te preocupa más hoy: cómo presentas lo que vendes, los precios o qué producto empujar mejor?";
+      return bold("Para afinar la recomendación, dime qué te preocupa más hoy: cómo presentas lo que vendes, los precios o qué producto empujar mejor?");
     }
 
     if (user.ecommerce_contexto === "pagina_carrito_checkout") {
-      return "Para orientarte mejor, dime dónde sientes más fricción hoy: en la landing, en el carrito o en todo el flujo de compra?";
+      return bold("Para orientarte mejor, dime dónde sientes más fricción hoy: en la landing, en el carrito o en todo el flujo de compra?");
     }
 
     if (user.ecommerce_contexto === "confianza_seguimiento") {
-      return "Para aterrizarlo mejor, dime qué te falta más hoy: confianza para cerrar, seguimiento comercial o recuperar oportunidades que se enfrían?";
+      return bold("Para aterrizarlo mejor, dime qué te falta más hoy: confianza para cerrar, seguimiento comercial o recuperar oportunidades que se enfrían?");
     }
 
-    return "Para orientarte mejor, dime qué es lo que más sientes que hoy está frenando tus resultados?";
+    return bold("Para orientarte mejor, dime qué es lo que más sientes que hoy está frenando tus resultados?");
   }
 
   if (user.ecommerce_rama === "conseguir_trafico") {
     if (user.ecommerce_necesidad === "publicidad_digital") {
-      return "Para aterrizar mejor esto, dime qué necesitas resolver primero: arrancar campañas, corregir campañas activas o entender qué tipo de campaña te conviene?";
+      return bold("Para aterrizar mejor esto, dime qué necesitas resolver primero: arrancar campañas, corregir campañas activas o entender qué tipo de campaña te conviene?");
     }
 
     if (user.ecommerce_necesidad === "contenido_posicionamiento") {
-      return "Para afinar la recomendación, dime qué necesitas fortalecer primero: redes, visibilidad en Google o una estrategia de contenidos conectada con ventas?";
+      return bold("Para afinar la recomendación, dime qué necesitas fortalecer primero: redes, visibilidad en Google o una estrategia de contenidos conectada con ventas?");
     }
 
     if (user.ecommerce_necesidad === "automatizacion_seguimiento") {
-      return "Para orientarte mejor, dime qué te pesa más hoy: responder más rápido, dar seguimiento a prospectos o integrar mejor formularios, WhatsApp y embudo?";
+      return bold("Para orientarte mejor, dime qué te pesa más hoy: responder más rápido, dar seguimiento a prospectos o integrar mejor formularios, WhatsApp y embudo?");
     }
   }
 
-  return "Para orientarte mejor, dime qué necesitas resolver primero dentro de tu caso?";
+  return bold("Para orientarte mejor, dime qué necesitas resolver primero dentro de tu caso?");
 }
 
 function buildFallbackReply(user) {
@@ -379,39 +416,39 @@ function buildSecondTurnAnchor(userMessage = "") {
   const clean = String(userMessage || "").trim().toLowerCase();
 
   if (!clean) {
-    return "Aquí ya conviene bajar esto a una decisión más puntual para que el siguiente ajuste tenga impacto real.";
+    return highlightDecisionLead("Aquí ya conviene bajar esto a una decisión más puntual para que el siguiente ajuste tenga impacto real.");
   }
 
   if (clean.includes("landing") || clean.includes("pagina") || clean.includes("página")) {
-    return "Si hoy la fricción está en la página o landing, entonces no conviene seguir enviando tráfico sin revisar primero cómo estás presentando la oferta y guiando la acción.";
+    return highlightDecisionLead("Si hoy la fricción está en la página o landing, entonces no conviene seguir enviando tráfico sin revisar primero cómo estás presentando la oferta y guiando la acción.");
   }
 
   if (clean.includes("checkout") || clean.includes("carrito")) {
-    return "Si el punto débil está en carrito o checkout, entonces el foco debería estar en reducir fricción, simplificar el proceso y evitar abandonos innecesarios.";
+    return highlightDecisionLead("Si el punto débil está en carrito o checkout, entonces el foco debería estar en reducir fricción, simplificar el proceso y evitar abandonos innecesarios.");
   }
 
   if (clean.includes("precio") || clean.includes("promoc")) {
-    return "Si la duda principal está en precios o promociones, entonces conviene revisar cómo se percibe el valor antes de tocar descuentos a ciegas.";
+    return highlightDecisionLead("Si la duda principal está en precios o promociones, entonces conviene revisar cómo se percibe el valor antes de tocar descuentos a ciegas.");
   }
 
   if (clean.includes("trafico") || clean.includes("tráfico")) {
-    return "Si el problema hoy está en el tráfico, entonces hay que separar si falta volumen, si falta intención o si el recorrido posterior no está convirtiendo bien.";
+    return highlightDecisionLead("Si el problema hoy está en el tráfico, entonces hay que separar si falta volumen, si falta intención o si el recorrido posterior no está convirtiendo bien.");
   }
 
   if (clean.includes("google") || clean.includes("seo")) {
-    return "Si el foco está en Google o SEO, entonces conviene trabajar visibilidad con intención comercial, no solo contenido por publicar.";
+    return highlightDecisionLead("Si el foco está en Google o SEO, entonces conviene trabajar visibilidad con intención comercial, no solo contenido por publicar.");
   }
 
   if (clean.includes("redes") || clean.includes("contenido")) {
-    return "Si el reto está en redes o contenido, entonces la clave no es publicar más por publicar, sino conectar mejor mensaje, propuesta y conversión.";
+    return highlightDecisionLead("Si el reto está en redes o contenido, entonces la clave no es publicar más por publicar, sino conectar mejor mensaje, propuesta y conversión.");
   }
 
   if (clean.includes("whatsapp") || clean.includes("seguimiento")) {
-    return "Si el problema está en WhatsApp o seguimiento, entonces conviene ordenar mejor la respuesta, la secuencia y el criterio de avance comercial.";
+    return highlightDecisionLead("Si el problema está en WhatsApp o seguimiento, entonces conviene ordenar mejor la respuesta, la secuencia y el criterio de avance comercial.");
   }
 
   if (clean.includes("formulario") || clean.includes("crm") || clean.includes("embudo")) {
-    return "Si el reto está en formularios, CRM o embudo, entonces el punto importante es que la captura y el seguimiento trabajen como un sistema y no como piezas sueltas.";
+    return highlightDecisionLead("Si el reto está en formularios, CRM o embudo, entonces el punto importante es que la captura y el seguimiento trabajen como un sistema y no como piezas sueltas.");
   }
 
   return `Con lo que mencionas sobre "${userMessage}", lo importante ahora es aterrizar mejor ese punto para que el ajuste no se quede en intuición, sino en criterio comercial real.`;
