@@ -2,6 +2,11 @@ const fs = require("fs");
 const path = require("path");
 
 // ========================================================
+// CONFIG
+// ========================================================
+const GOOGLE_SHEETS_WEBHOOK_URL = process.env.GOOGLE_SHEETS_WEBHOOK_URL || "";
+
+// ========================================================
 // RUTAS DE LOGS
 // ========================================================
 const logsDir = path.join(__dirname, "../logs");
@@ -13,6 +18,12 @@ const errorsLogPath = path.join(logsDir, "errors.jsonl");
 // ========================================================
 const ALLOWED_LEAD_EVENTS = [
   "entry",
+  "qualified",
+  "cta_click",
+  "conversion_intent"
+];
+
+const SHEETS_FORWARD_EVENTS = [
   "qualified",
   "cta_click",
   "conversion_intent"
@@ -101,6 +112,54 @@ function isAllowedLeadEvent(payload = {}) {
   return Boolean(payload.type) && ALLOWED_LEAD_EVENTS.includes(payload.type);
 }
 
+function shouldForwardToSheets(payload = {}) {
+  return Boolean(payload.type) && SHEETS_FORWARD_EVENTS.includes(payload.type);
+}
+
+async function forwardLeadToGoogleSheets(payload = {}) {
+  try {
+    if (!GOOGLE_SHEETS_WEBHOOK_URL) {
+      return;
+    }
+
+    if (!shouldForwardToSheets(payload)) {
+      return;
+    }
+
+    const body = {
+      timestamp: payload.timestamp || new Date().toISOString(),
+      phone: payload.phone || "",
+      module: payload.module || "",
+      type: payload.type || "",
+      estado: payload.estado || "",
+      score: payload.score ?? "",
+      lead_type: payload.lead_type || "",
+      cta: payload.cta || "",
+      action: payload.action || "",
+      via: payload.via || "",
+      source: payload.source || ""
+    };
+
+    const response = await fetch(GOOGLE_SHEETS_WEBHOOK_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(body)
+    });
+
+    if (!response.ok) {
+      console.error(
+        "[LOGGER_ERROR] Google Sheets respondió con error:",
+        response.status,
+        response.statusText
+      );
+    }
+  } catch (err) {
+    console.error("[LOGGER_ERROR] No se pudo enviar lead a Google Sheets:", err.message);
+  }
+}
+
 // ========================================================
 // LOGS PRINCIPALES
 // ========================================================
@@ -116,6 +175,9 @@ function logLeadEvent(payload = {}) {
 
     console.log("[LEAD_EVENT]", JSON.stringify(record));
     appendJsonLine(leadsLogPath, normalizedPayload);
+
+    // Envío silencioso a Google Sheets
+    void forwardLeadToGoogleSheets(record);
   } catch (err) {
     console.error("[LOGGER_ERROR] logLeadEvent fallo:", err.message);
   }
