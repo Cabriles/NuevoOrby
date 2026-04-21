@@ -175,29 +175,87 @@ function buildUnknownMessage() {
 ${getMainMenu()}`;
 }
 
-function isGreetingMessage(text = "") {
-  const value = normalizeText(text);
+function detectDirectCampaignModule(rawMessage = "") {
+  const text = normalizeText(rawMessage);
 
-  const greetings = [
-    "hola",
-    "hola!",
-    "hola.",
-    "holi",
-    "buenas",
-    "buenos dias",
-    "buen día",
-    "buen dia",
-    "buenas tardes",
-    "buenas noches",
-    "hello",
-    "hi",
-    "hey",
-    "que tal",
-    "qué tal",
-    "saludos"
-  ];
+  const directTriggers = {
+    amazon: [
+      "amazon",
+      "amazon fba",
+      "vender en amazon",
+      "quiero vender en amazon",
+      "necesito mas informacion sobre amazon fba",
+      "necesito más información sobre amazon fba"
+    ],
 
-  return greetings.includes(value);
+    importacion: [
+      "importar",
+      "importar desde china",
+      "quiero importar desde china",
+      "proveedor en china",
+      "proveedores en china",
+      "comprar en china"
+    ],
+
+    automatizacion: [
+      "automatizar",
+      "automatizar negocio",
+      "automatizar mi negocio",
+      "agentes ia",
+      "agentes bots",
+      "bots ia",
+      "inteligencia artificial",
+      "quiero automatizar mi negocio"
+    ],
+
+    ecommerce: [
+      "ecommerce",
+      "crear tienda",
+      "tienda online",
+      "shopify",
+      "woocommerce",
+      "quiero una tienda online"
+    ],
+
+    atencion: [
+      "asesoria",
+      "asesoría",
+      "quiero asesoria",
+      "quiero asesoría",
+      "necesito ayuda",
+      "necesito asesoria",
+      "necesito asesoría"
+    ],
+
+    club: [
+      "club oneorbix",
+      "club de importadores",
+      "membresia club oneorbix",
+      "membresía club oneorbix",
+      "quiero unirme al club"
+    ]
+  };
+
+  for (const [moduleKey, triggers] of Object.entries(directTriggers)) {
+    if (triggers.some((trigger) => text.includes(trigger))) {
+      return moduleKey;
+    }
+  }
+
+  return null;
+}
+
+function resolveDirectModuleState(moduleKey) {
+  const stateMap = {
+    amazon: "amazon_p1",
+    automatizacion: "automatizacion_p1",
+    ecommerce: "ecommerce_p1",
+    importacion: "importacion_p1",
+    atencion: "atencion_p1",
+    club: "atencion_p1"
+  };
+
+  return stateMap[moduleKey] || null;
 }
 
 // ========================================================
@@ -306,6 +364,29 @@ ${buildWelcomeMenu()}`,
 // ENTRADA A MÓDULO
 // ========================================================
 function handleModuleEntry({ user, phone, rawMessage }) {
+  const directModule = detectDirectCampaignModule(rawMessage);
+
+  if (directModule) {
+    const initialState = resolveDirectModuleState(directModule);
+
+    if (!initialState) return null;
+
+    user.estado = initialState;
+    user.interes_principal = directModule === "club" ? "atencion" : directModule;
+    saveUser(phone, user);
+
+    return buildResponseWithNavigation(
+      getModuleIntroByKey(directModule === "club" ? "atencion" : directModule),
+      {
+        source: "backend",
+        matched_module: directModule,
+        matched_intent: "direct_campaign_entry",
+        via: "direct_trigger"
+      },
+      initialState
+    );
+  }
+
   const entry = resolveModuleEntry(rawMessage);
 
   if (!entry) return null;
