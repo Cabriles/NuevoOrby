@@ -175,6 +175,22 @@ function buildUnknownMessage() {
 ${getMainMenu()}`;
 }
 
+function isHighIntentAmazon(message = "") {
+  const msg = normalizeText(message);
+
+  const triggers = [
+    "membresia",
+    "membresía",
+    "curso",
+    "programa",
+    "empezar",
+    "ya",
+    "iniciar"
+  ];
+
+  return triggers.some(t => msg.includes(t));
+}
+
 function isGreetingMessage(text = "") {
   const value = normalizeText(text);
 
@@ -204,14 +220,24 @@ function detectDirectCampaignModule(rawMessage = "") {
   const text = normalizeText(rawMessage);
 
   const directTriggers = {
-    amazon: [
-      "amazon",
-      "amazon fba",
-      "vender en amazon",
-      "quiero vender en amazon",
-      "necesito mas informacion sobre amazon fba",
-      "necesito más información sobre amazon fba"
-    ],
+    aamazon: [
+  // intención general
+  "amazon",
+  "amazon fba",
+  "vender en amazon",
+  "quiero vender en amazon",
+  "necesito mas informacion sobre amazon fba",
+  "necesito más información sobre amazon fba",
+
+  // intención comercial (clave)
+  "membresia amazon",
+  "membresía amazon",
+  "curso amazon",
+  "programa amazon",
+  "quiero empezar en amazon",
+  "quiero vender ya en amazon",
+  "como empiezo en amazon"
+],
 
     importacion: [
       "importar",
@@ -389,7 +415,16 @@ ${buildWelcomeMenu()}`,
 // ENTRADA A MÓDULO
 // ========================================================
 function handleModuleEntry({ user, phone, rawMessage }) {
-  const directModule = detectDirectCampaignModule(rawMessage);
+const directModule = detectDirectCampaignModule(rawMessage);
+
+const safeModule = directModule === "club" ? "atencion" : directModule;
+
+if (safeModule === "amazon") {
+  if (isHighIntentAmazon(rawMessage)) {
+    user.amazon_high_intent = true;
+    saveUser(phone, user);
+  }
+}
 
   if (directModule) {
     const initialState = resolveDirectModuleState(directModule);
