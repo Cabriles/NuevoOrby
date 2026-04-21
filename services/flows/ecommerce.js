@@ -153,10 +153,8 @@ function highlightDecisionLead(text = "") {
   ];
 
   for (const pattern of patterns) {
-    const match = clean.match(pattern);
-    if (match) {
-      const lead = match[0];
-      return clean.replace(lead, bold(lead));
+    if (pattern.test(clean)) {
+      return bold(clean); // 🔥 ahora resalta TODA la frase
     }
   }
 
@@ -466,7 +464,7 @@ function buildSecondTurnImplementationDetail(user, userMessage = "") {
 
   if (user.ecommerce_rama === "crear_tienda") {
     if (user.ecommerce_necesidad === "crear_desde_cero") {
-      return "Aquí conviene definir primero una estructura clara de oferta, recorrido y conversión para que la tienda arranque con lógica comercial y no solo técnica.";
+      return "Conviene definir primero una estructura clara de oferta, recorrido y conversión para que la tienda arranque con lógica comercial y no solo técnica.";
     }
 
     if (user.ecommerce_necesidad === "configurar_estructura") {
@@ -489,10 +487,10 @@ function buildSecondTurnImplementationDetail(user, userMessage = "") {
   if (user.ecommerce_rama === "mejorar_resultados") {
     if (user.ecommerce_contexto === "oferta_propuesta") {
       if (msg.includes("precio") || msg.includes("promoc")) {
-        return "Aquí conviene revisar cómo se percibe el valor antes de tocar descuentos, para no bajar precio sin corregir la propuesta.";
+        return "Si el problema está en precios o promociones, el riesgo es bajar precios sin corregir la propuesta, lo que termina afectando margen sin mejorar conversión. Primero hay que asegurar que el valor esté bien percibido antes de ajustar precios.";
       }
 
-      return "Aquí lo importante sería hacer más clara y deseable la propuesta para que sea más fácil convertir.";
+      return "Lo importante sería hacer más clara y deseable la propuesta para que sea más fácil convertir.";
     }
 
     if (user.ecommerce_contexto === "pagina_carrito_checkout") {
