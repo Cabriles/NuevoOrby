@@ -220,7 +220,7 @@ function detectDirectCampaignModule(rawMessage = "") {
   const text = normalizeText(rawMessage);
 
   const directTriggers = {
-    aamazon: [
+    amazon: [
   // intención general
   "amazon",
   "amazon fba",
