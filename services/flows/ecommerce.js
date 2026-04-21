@@ -456,7 +456,7 @@ function buildSecondTurnAnchor(userMessage = "") {
     return highlightDecisionLead("Si el reto está en formularios, CRM o embudo, entonces el punto importante es que la captura y el seguimiento trabajen como un sistema y no como piezas sueltas.");
   }
 
-  return `Con lo que mencionas sobre "${userMessage}", lo importante ahora es aterrizar mejor ese punto para que el ajuste no se quede en intuición, sino en criterio comercial real.`;
+  return highlightDecisionLead("Aquí conviene aterrizar mejor ese punto para que el ajuste no se quede en intuición, sino en criterio comercial real.");
 }
 
 function buildSecondTurnImplementationDetail(user, userMessage = "") {
@@ -464,7 +464,7 @@ function buildSecondTurnImplementationDetail(user, userMessage = "") {
 
   if (user.ecommerce_rama === "crear_tienda") {
     if (user.ecommerce_necesidad === "crear_desde_cero") {
-      return "Conviene definir primero una estructura clara de oferta, recorrido y conversión para que la tienda arranque con lógica comercial y no solo técnica.";
+      return "Aquí conviene definir primero una estructura clara de oferta, recorrido y conversión para que la tienda arranque con lógica comercial y no solo técnica.";
     }
 
     if (user.ecommerce_necesidad === "configurar_estructura") {
@@ -487,7 +487,7 @@ function buildSecondTurnImplementationDetail(user, userMessage = "") {
   if (user.ecommerce_rama === "mejorar_resultados") {
     if (user.ecommerce_contexto === "oferta_propuesta") {
       if (msg.includes("precio") || msg.includes("promoc")) {
-        return "Si el problema está en precios o promociones, el riesgo es bajar precios sin corregir la propuesta, lo que termina afectando margen sin mejorar conversión. Primero hay que asegurar que el valor esté bien percibido antes de ajustar precios.";
+        return "Lo importante aquí es no bajar precios sin corregir la propuesta, porque eso puede afectar margen sin mejorar conversión. Primero hay que asegurar que el valor esté bien percibido antes de ajustar precios.";
       }
 
       return "Lo importante sería hacer más clara y deseable la propuesta para que sea más fácil convertir.";
