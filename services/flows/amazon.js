@@ -338,35 +338,35 @@ function buildAmazonPriority(user) {
 function buildFirstTurnQuestion(user) {
   if (user.amazon_rama === "ya_tengo_producto") {
     if (user.amazon_necesidad === "validar_producto") {
-      return "Para aterrizarlo mejor, dime algo puntual: hoy te preocupa más la competencia, los márgenes o saber si realmente vale la pena entrar con ese producto?";
+      return bold( "Para aterrizarlo mejor, dime algo puntual: hoy te preocupa más la competencia, los márgenes o saber si realmente vale la pena entrar con ese producto?");
     }
 
     if (user.amazon_necesidad === "empezar_vender") {
-      return "Para orientarte mejor, dime qué te frena más hoy: entender el proceso, preparar el lanzamiento o definir qué paso tomar primero?";
+      return bold( "Para orientarte mejor, dime qué te frena más hoy: entender el proceso, preparar el lanzamiento o definir qué paso tomar primero?");
     }
   }
 
   if (user.amazon_rama === "no_se_producto") {
     if (user.amazon_necesidad === "producto_con_potencial") {
-      return "Para afinar la recomendación, dime qué te interesa más hoy: encontrar una categoría prometedora, reducir riesgo al elegir o detectar algo con margen real?";
+      return bold( "Para afinar la recomendación, dime qué te interesa más hoy: encontrar una categoría prometedora, reducir riesgo al elegir o detectar algo con margen real?");
     }
 
     if (user.amazon_necesidad === "validar_idea_producto") {
-      return "Para orientarte mejor, dime qué necesitas comprobar primero: demanda, competencia o posibilidad real de diferenciar esa idea?";
+      return bold( "Para orientarte mejor, dime qué necesitas comprobar primero: demanda, competencia o posibilidad real de diferenciar esa idea?");
     }
   }
 
   if (user.amazon_rama === "empezar_desde_cero") {
     if (user.amazon_necesidad === "asistencia_paso_a_paso") {
-      return "Para aterrizar mejor esto, dime qué te pesa más hoy: no saber por dónde empezar, no entender el proceso completo o temer cometer errores al inicio?";
+      return bold( "Para aterrizar mejor esto, dime qué te pesa más hoy: no saber por dónde empezar, no entender el proceso completo o temer cometer errores al inicio?");
     }
 
     if (user.amazon_necesidad === "elegir_producto_correctamente") {
-      return "Para afinar la recomendación, dime qué te preocupa más hoy: elegir mal el producto, no entender la demanda o entrar a una categoría demasiado competida?";
+      return bold( "Para afinar la recomendación, dime qué te preocupa más hoy: elegir mal el producto, no entender la demanda o entrar a una categoría demasiado competida?");
     }
   }
 
-  return "Para orientarte mejor, dime qué necesitas resolver primero dentro de tu proceso con Amazon?";
+  return bold( "Para orientarte mejor, dime qué necesitas resolver primero dentro de tu proceso con Amazon?");
 }
 
 function buildFallbackReply(user) {
@@ -414,42 +414,74 @@ El siguiente paso es ordenar mejor la necesidad para orientarte con una recomend
 ${question}`;
 }
 
+function buildHighIntentAmazonReply(user) {
+  if (user.amazon_rama === "ya_tengo_producto") {
+    return `Perfecto. Si ya estás en esta etapa, lo importante ahora es validar bien el producto antes de avanzar, para no entrar a Amazon con una decisión que después se debilite por competencia, márgenes o demanda mal leída.
+
+En *OneOrbix* podemos ayudarte a aterrizar eso con criterio comercial y una ruta más clara según tu caso.
+
+*¿Quieres que revisemos tu producto con más criterio o prefieres ver directamente cómo funciona el programa para avanzar?*`;
+  }
+
+  if (user.amazon_rama === "no_se_producto") {
+    return `Perfecto. Si quieres avanzar en Amazon y todavía estás definiendo producto, lo importante ahora es no elegir por entusiasmo, sino con un criterio que reduzca riesgo y te acerque más rápido a una opción defendible.
+
+En *OneOrbix* podemos ayudarte a ordenar esa decisión y mostrarte una ruta más clara para no perder tiempo en ideas flojas.
+
+*¿Prefieres que te orientemos sobre cómo elegir mejor el producto o quieres ver directamente cómo funciona el programa?*`;
+  }
+
+  if (user.amazon_rama === "empezar_desde_cero") {
+    return `Perfecto. Si tu intención es empezar ya, lo importante ahora es entrar con una estructura clara y no improvisar el proceso, porque en Amazon los errores del inicio suelen costar tiempo y dinero.
+
+En *OneOrbix* podemos ayudarte a aterrizar ese arranque con una ruta práctica y acompañamiento más ordenado.
+
+*¿Quieres que te expliquemos el siguiente paso correcto o prefieres ver directamente cómo funciona el programa?*`;
+  }
+
+  return `Perfecto. Si ya estás en una etapa de decisión, lo importante ahora es ordenar bien el siguiente paso para avanzar con más claridad y menos fricción.
+
+En *OneOrbix* podemos ayudarte a aterrizar eso con una orientación más directa según tu caso.
+
+*¿Quieres que revisemos tu caso puntual o prefieres ver directamente cómo funciona el programa?*`;
+}
+
 function buildSecondTurnAnchor(userMessage = "") {
   const clean = String(userMessage || "").trim().toLowerCase();
 
   if (!clean) {
-    return "Aquí ya conviene bajar esto a una decisión más puntual para que el siguiente paso en Amazon no se tome a ciegas.";
+    return "En este punto vale la pena bajar esto a una decisión más puntual para que el siguiente paso en Amazon no se tome a ciegas.";
   }
 
   if (clean.includes("compet")) {
-    return "Si hoy lo que más te pesa es la competencia, entonces lo importante no es solo ver cuántos vendedores hay, sino qué tan saturado está el espacio y si todavía existe margen para entrar con criterio.";
+    return "El punto clave aquí es entender qué tan saturado está el espacio y si realmente existe margen para entrar con criterio.";
   }
 
   if (clean.includes("margen") || clean.includes("rentab")) {
-    return "Si el punto delicado está en los márgenes, entonces conviene revisar con cuidado costos, comisiones, logística y presión de precio antes de asumir que el producto realmente deja utilidad.";
+    return "El riesgo aquí es asumir rentabilidad sin revisar todos los costos reales que afectan el resultado en Amazon.";
   }
 
   if (clean.includes("demanda")) {
-    return "Si la duda principal está en la demanda, entonces lo más sensato es validar si hay movimiento real y sostenido, no solo señales superficiales que puedan confundir.";
+    return "La prioridad aquí es validar si existe una demanda real y sostenida, no solo señales superficiales.";
   }
 
   if (clean.includes("producto")) {
-    return "Si el foco está en elegir bien el producto, entonces conviene trabajar el criterio de selección con más rigor para evitar entrar con una opción que se vea atractiva, pero no sea sólida para Amazon.";
+    return "Lo importante aquí es trabajar mejor el criterio de selección para no entrar con una opción débil.";
   }
 
   if (clean.includes("empezar") || clean.includes("inicio")) {
-    return "Si hoy el reto está en saber cómo empezar, entonces la clave es ordenar primero el recorrido y no lanzarte a ejecutar sin una secuencia clara.";
+    return "La prioridad aquí es ordenar el proceso antes de ejecutar para evitar errores tempranos.";
   }
 
   if (clean.includes("marca")) {
-    return "Si lo que te interesa es marca propia, entonces conviene validar mejor diferenciación, viabilidad y capacidad real de sostener esa propuesta en Amazon.";
+    return "El punto clave aquí es validar diferenciación y capacidad real de sostener una marca en Amazon.";
   }
 
   if (clean.includes("fba") || clean.includes("revender")) {
-    return "Si el enfoque está en revender por FBA, entonces lo importante es detectar productos con salida real y evitar categorías donde la presión competitiva se coma el margen.";
+    return "Lo importante aquí es detectar productos con salida real y evitar categorías donde la presión competitiva se coma el margen.";
   }
 
-  return `Con lo que mencionas sobre "${userMessage}", lo importante ahora es aterrizar mejor ese punto para que la decisión no se quede en intuición, sino en criterio comercial real.`;
+  return "La prioridad aquí es aterrizar mejor ese punto para tomar una decisión con criterio comercial real.";
 }
 
 function buildSecondTurnImplementationDetail(user, userMessage = "") {
@@ -457,55 +489,57 @@ function buildSecondTurnImplementationDetail(user, userMessage = "") {
 
   if (user.amazon_rama === "ya_tengo_producto") {
     if (user.amazon_necesidad === "validar_producto") {
+
       if (msg.includes("compet")) {
-        return "Aquí tendría sentido revisar saturación, tipo de competencia, posicionamiento y posibilidad real de diferenciarte, porque no basta con ver que el producto ya se vende.";
+        return "El punto clave aquí es revisar saturación, tipo de competencia y posibilidad real de diferenciarte, porque no basta con ver que el producto ya se vende.";
       }
 
       if (msg.includes("margen") || msg.includes("rentab")) {
-        return "Aquí lo más útil sería desarmar el número completo para ver si después de comisiones, logística, publicidad y presión de precio el producto sigue siendo defendible.";
+        return "El riesgo aquí es asumir utilidad sin desarmar el número completo considerando comisiones, logística y presión de precio.";
       }
 
       if (msg.includes("demanda")) {
-        return "Aquí conviene validar si esa demanda es consistente y si se sostiene en el tiempo, porque entrar por una señal débil puede dar una falsa sensación de oportunidad.";
+        return "La prioridad aquí es validar si la demanda es consistente y no una señal débil que genere falsas expectativas.";
       }
 
-      return "Aquí conviene revisar la viabilidad real del producto antes de empujar lanzamiento, para que el siguiente paso en Amazon se apoye en datos y no solo en intuición.";
+      return "Lo importante aquí es validar la viabilidad real del producto antes de empujar el lanzamiento.";
     }
 
     if (user.amazon_necesidad === "empezar_vender") {
-      return "Aquí lo importante sería ordenar bien el arranque, definir prioridades y evitar improvisar el lanzamiento, porque en Amazon los errores del inicio suelen salir caros.";
+      return "La prioridad aquí es ordenar bien el arranque para evitar improvisar el lanzamiento y cometer errores costosos.";
     }
   }
 
   if (user.amazon_rama === "no_se_producto") {
     if (user.amazon_necesidad === "producto_con_potencial") {
+
       if (msg.includes("margen")) {
-        return "Aquí conviene buscar una oportunidad donde el margen siga teniendo sentido después de todos los costos reales, porque un producto atractivo sin margen termina siendo una mala elección.";
+        return "El punto clave aquí es encontrar una oportunidad donde el margen se sostenga después de todos los costos reales.";
       }
 
       if (msg.includes("demanda")) {
-        return "Aquí lo más útil sería identificar categorías donde la demanda sea suficientemente clara y no dependa de modas débiles o señales engañosas.";
+        return "La prioridad aquí es detectar categorías con demanda clara y no señales engañosas.";
       }
 
-      return "Aquí tendría sentido trabajar un criterio de selección más fino para detectar una opción con más potencial real y menos riesgo de entrar a una categoría equivocada.";
+      return "Lo importante aquí es construir un criterio de selección más fino para reducir riesgo.";
     }
 
     if (user.amazon_necesidad === "validar_idea_producto") {
-      return "Aquí conviene revisar si esa idea tiene espacio comercial real, si se puede defender mejor frente a la competencia y si vale la pena convertirla en proyecto antes de avanzar.";
+      return "El punto clave aquí es confirmar si la idea tiene espacio comercial real antes de convertirla en proyecto.";
     }
   }
 
   if (user.amazon_rama === "empezar_desde_cero") {
     if (user.amazon_necesidad === "asistencia_paso_a_paso") {
-      return "Aquí lo más sano sería ordenar el proceso por etapas, definir qué va primero y quitar ruido desde el inicio para que el avance no dependa de ensayo y error.";
+      return "La prioridad aquí es ordenar el proceso por etapas para avanzar con claridad y no por ensayo y error.";
     }
 
     if (user.amazon_necesidad === "elegir_producto_correctamente") {
-      return "Aquí conviene construir un criterio sólido de elección para no dejarte llevar por ideas llamativas pero flojas en demanda, competencia o rentabilidad.";
+      return "Lo importante aquí es construir un criterio sólido para evitar elegir productos débiles.";
     }
   }
 
-  return "Aquí conviene aterrizar mejor ese punto específico para que el siguiente paso en Amazon sea más claro, más defendible y con menos riesgo de error.";
+  return "La prioridad aquí es aterrizar mejor ese punto para tomar una decisión más clara y con menor riesgo.";
 }
 
 function buildStrongSecondTurnFallback(user, userMessage) {
@@ -745,6 +779,11 @@ async function resolveQualifiedReply({
     }
   }
 
+    if (user.amazon_high_intent === true) {
+    const reply = buildHighIntentAmazonReply(user);
+    return buildHybridReply(reply, false);
+  }
+  
   const fallbackReply = buildFallbackReply(user);
 
   if (typeof getGeminiReplyWithFallback !== "function") {
@@ -1409,8 +1448,9 @@ ${phone}
 
       const mustShowCTA = user.amazon_ai_turns >= 2;
 
-      if (mustShowCTA) {
+        if (mustShowCTA) {
         user.amazon_cta_enabled = true;
+        user.amazon_high_intent = false;
       }
 
       saveAndLog({
