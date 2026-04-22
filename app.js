@@ -422,22 +422,22 @@ function trackBusinessMetrics({
     String(toState || "").includes("callback") ||
     (toState === "finalizado" && isCtaState(fromState));
 
- if (strongIntentState && !userAfter.alert_sent) {
+  if (strongIntentState && !userAfter.alert_sent) {
+    userAfter.alert_sent = true;
+    saveUser(phone, userAfter);
 
-  userAfter.alert_sent = true;
-  saveUser(phone, userAfter);
-
-  safeLogLeadEvent({
-    type: "conversion_intent",
-    phone,
-    name: leadName,
-    module,
-    action: inferCtaName(toState || fromState, message),
-    estado: toState,
-    score,
-    lead_type: leadType,
-    source
-  });
+    safeLogLeadEvent({
+      type: "conversion_intent",
+      phone,
+      name: leadName,
+      module,
+      action: inferCtaName(toState || fromState, message),
+      estado: toState,
+      score,
+      lead_type: leadType,
+      source
+    });
+  }
 }
 
 // ========================================================
