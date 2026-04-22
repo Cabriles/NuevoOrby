@@ -5,6 +5,9 @@ const path = require("path");
 // CONFIG
 // ========================================================
 const GOOGLE_SHEETS_WEBHOOK_URL = process.env.GOOGLE_SHEETS_WEBHOOK_URL || "";
+const OWNER_ALERT_PHONE = process.env.OWNER_ALERT_PHONE || "";
+const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN || "";
+const WHATSAPP_PHONE_NUMBER_ID = process.env.WHATSAPP_PHONE_NUMBER_ID || "";
 
 // ========================================================
 // RUTAS DE LOGS
@@ -116,6 +119,13 @@ function shouldForwardToSheets(payload = {}) {
   return Boolean(payload.type) && SHEETS_FORWARD_EVENTS.includes(payload.type);
 }
 
+function shouldSendOwnerAlert(payload = {}) {
+  return payload.type === "conversion_intent";
+}
+
+// ========================================================
+// GOOGLE SHEETS
+// ========================================================
 async function forwardLeadToGoogleSheets(payload = {}) {
   try {
     if (!GOOGLE_SHEETS_WEBHOOK_URL) {
@@ -128,6 +138,7 @@ async function forwardLeadToGoogleSheets(payload = {}) {
 
     const body = {
       timestamp: payload.timestamp || new Date().toISOString(),
+      name: payload.name || payload.lead_name || "",
       phone: payload.phone || "",
       module: payload.module || "",
       type: payload.type || "",
@@ -161,6 +172,66 @@ async function forwardLeadToGoogleSheets(payload = {}) {
 }
 
 // ========================================================
+// ALERTA AL OWNER POR WHATSAPP
+// ========================================================
+async function sendOwnerLeadAlert(payload = {}) {
+  try {
+    if (!shouldSendOwnerAlert(payload)) {
+      return;
+    }
+
+    if (!OWNER_ALERT_PHONE || !WHATSAPP_TOKEN || !WHATSAPP_PHONE_NUMBER_ID) {
+      console.error("[LOGGER_ERROR] Faltan variables para alerta al owner.");
+      return;
+    }
+
+    const leadName = payload.name || payload.lead_name || "N/D";
+    const phone = payload.phone || "N/D";
+    const moduleName = payload.module || "N/D";
+    const action = payload.action || payload.cta || "N/D";
+
+    const messageBody = `🔥 Lead caliente
+Nombre: ${leadName}
+Teléfono: ${phone}
+Módulo: ${moduleName}
+Tipo: ${payload.type || "N/D"}
+Acción: ${action}
+Escríbele ahora: https://wa.me/${phone}`;
+
+    const response = await fetch(
+      `https://graph.facebook.com/v19.0/${WHATSAPP_PHONE_NUMBER_ID}/messages`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${WHATSAPP_TOKEN}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          messaging_product: "whatsapp",
+          to: OWNER_ALERT_PHONE,
+          type: "text",
+          text: {
+            body: messageBody
+          }
+        })
+      }
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => "");
+      console.error(
+        "[LOGGER_ERROR] No se pudo enviar alerta al owner:",
+        response.status,
+        response.statusText,
+        errorText
+      );
+    }
+  } catch (err) {
+    console.error("[LOGGER_ERROR] sendOwnerLeadAlert fallo:", err.message);
+  }
+}
+
+// ========================================================
 // LOGS PRINCIPALES
 // ========================================================
 function logLeadEvent(payload = {}) {
@@ -178,6 +249,9 @@ function logLeadEvent(payload = {}) {
 
     // Envío silencioso a Google Sheets
     void forwardLeadToGoogleSheets(record);
+
+    // Alerta silenciosa al owner solo para conversion_intent
+    void sendOwnerLeadAlert(record);
   } catch (err) {
     console.error("[LOGGER_ERROR] logLeadEvent fallo:", err.message);
   }

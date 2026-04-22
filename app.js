@@ -378,6 +378,7 @@ function trackBusinessMetrics({
   const score = Number(userAfter?.score || 0);
   const leadType = classifyLead(userAfter);
   const module = moduleKey || getStateModule(userAfter) || getStateModule(userBefore);
+  const leadName = userAfter?.lead_name || userBefore?.lead_name || "";
 
   const enteredLeadState =
     !isLeadState(fromState) &&
@@ -387,6 +388,7 @@ function trackBusinessMetrics({
     safeLogLeadEvent({
       type: "qualified",
       phone,
+      name: leadName,
       module,
       estado: toState,
       score,
@@ -403,6 +405,7 @@ function trackBusinessMetrics({
     safeLogLeadEvent({
       type: "cta_click",
       phone,
+      name: leadName,
       module,
       cta: inferCtaName(toState, message),
       estado: toState,
@@ -423,6 +426,7 @@ function trackBusinessMetrics({
     safeLogLeadEvent({
       type: "conversion_intent",
       phone,
+      name: leadName,
       module,
       action: inferCtaName(toState || fromState, message),
       estado: toState,
@@ -541,6 +545,7 @@ ${buildWelcomeMenu()}`,
 function handleModuleEntry({ user, phone, rawMessage }) {
   const directModule = detectDirectCampaignModule(rawMessage);
   const safeModule = directModule === "club" ? "atencion" : directModule;
+  const leadName = user?.lead_name || "";
 
   if (safeModule === "amazon" && isHighIntentAmazon(rawMessage)) {
     user.amazon_high_intent = true;
@@ -559,6 +564,7 @@ function handleModuleEntry({ user, phone, rawMessage }) {
     safeLogLeadEvent({
       type: "entry",
       phone,
+      name: leadName,
       module: directModule === "club" ? "atencion" : directModule,
       via: "direct_trigger",
       estado: updatedUser?.estado || initialState,
@@ -588,6 +594,7 @@ function handleModuleEntry({ user, phone, rawMessage }) {
   safeLogLeadEvent({
     type: "entry",
     phone,
+    name: leadName,
     module: entry.module,
     via: entry.via,
     estado: updatedUser?.estado || entry.estado_inicial,
@@ -611,7 +618,8 @@ function handleModuleEntry({ user, phone, rawMessage }) {
 // ========================================================
 async function processIncomingMessage({
   phone,
-  message
+  message,
+  leadName = null
 }) {
   try {
     const rawMessage = String(message || "").trim();
@@ -625,6 +633,11 @@ async function processIncomingMessage({
     }
 
     const user = getOrCreateUser(phone);
+
+    if (leadName && !user.lead_name) {
+      user.lead_name = leadName;
+      saveUser(phone, user);
+    }
 
     // 1. Mensaje vacío -> mostrar menú
     if (!cleanMessage) {
@@ -772,10 +785,17 @@ async function handleWebhookPayload(payload = {}) {
       payload?.incoming_message ||
       "";
 
+    const simpleLeadName =
+      payload?.leadName ||
+      payload?.lead_name ||
+      payload?.name ||
+      null;
+
     if (simplePhone && String(simpleMessage || "").trim()) {
       const result = await processIncomingMessage({
         phone: simplePhone,
-        message: simpleMessage
+        message: simpleMessage,
+        leadName: simpleLeadName
       });
 
       return {
@@ -791,6 +811,7 @@ async function handleWebhookPayload(payload = {}) {
     const value = change?.value;
     const incomingMessage = value?.messages?.[0];
     const contact = value?.contacts?.[0];
+    const leadName = contact?.profile?.name || null;
 
     if (!incomingMessage) {
       return {
@@ -827,7 +848,8 @@ async function handleWebhookPayload(payload = {}) {
 
     const result = await processIncomingMessage({
       phone,
-      message
+      message,
+      leadName
     });
 
     return {
