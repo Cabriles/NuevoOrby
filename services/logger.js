@@ -102,7 +102,6 @@ function normalizeEventType(payload = {}) {
       lead_profile_completed: "qualified",
       cta_meeting_selected: "cta_click",
       cta_whatsapp_selected: "cta_click",
-      callback_requested: "conversion_intent"
     };
 
     normalizedPayload.type = legacyMap[normalizedPayload.event_type] || null;
