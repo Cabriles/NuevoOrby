@@ -434,8 +434,13 @@ if (strongIntentState) {
 
   // BLOQUEO POR DATOS INCOMPLETOS
   if (!module || !phone || !inferredAction) {
-    return;
-  }
+  console.log("⚠️ Evento bloqueado por datos incompletos", {
+    module,
+    phone,
+    inferredAction
+  });
+  return;
+}
 
   // BLOQUEO POR DUPLICADO REAL
   if (currentUser.last_owner_alert_fingerprint === alertFingerprint) {
