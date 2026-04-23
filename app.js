@@ -439,32 +439,33 @@ function trackBusinessMetrics({
     });
   }
 
-  const enteredPrimaryCtaSelection =
-    !isPrimaryCtaSelectionState(fromState) &&
-    isPrimaryCtaSelectionState(toState);
+  const alreadyClickedCTA =
+  userAfter?.cta_click_registered === true;
 
-  if (enteredPrimaryCtaSelection) {
-    safeLogLeadEvent({
+if (enteredPrimaryCtaSelection && !alreadyClickedCTA) {
+  userAfter.cta_click_registered = true;
+  saveUser(phone, userAfter);
+
+  safeLogLeadEvent({
+    type: "cta_click",
+    phone,
+    name: leadName,
+    module,
+    cta: inferCtaName(toState, message),
+    estado: toState,
+    score,
+    lead_type: leadType,
+    via: inferEventVia({
       type: "cta_click",
-      phone,
-      name: leadName,
-      module,
-      cta: inferCtaName(toState, message),
-      estado: toState,
-      score,
-      lead_type: leadType,
-      via: inferEventVia({
-        type: "cta_click",
-        fromState,
-        toState,
-        message,
-        userBefore,
-        userAfter
-      }),
-      source
-    });
-  }
-
+      fromState,
+      toState,
+      message,
+      userBefore,
+      userAfter
+    }),
+    source
+  });
+}
   const strongIntentState =
     enteredPrimaryCtaSelection ||
     (
