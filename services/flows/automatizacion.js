@@ -107,8 +107,56 @@ function getStandardCTA() {
 2️⃣ Quiero agendar una reunión`;
 }
 
+function bold(text = "") {
+  const clean = String(text || "").trim();
+  if (!clean) return "";
+  if (clean.startsWith("*") && clean.endsWith("*")) return clean;
+  return `*${clean}*`;
+}
+
+function highlightBrand(text = "") {
+  return String(text || "").replace(/\bOneOrbix\b/g, "*OneOrbix*");
+}
+
+function highlightDecisionLead(text = "") {
+  const clean = String(text || "").trim();
+  if (!clean) return clean;
+
+  const patterns = [
+    /^La prioridad aquí es/i,
+    /^El punto clave aquí es/i,
+    /^El riesgo aquí es/i,
+    /^Lo importante aquí es/i,
+    /^En este punto vale la pena/i,
+    /^Primero hay que/i,
+    /^Aquí conviene/i,
+    /^Aquí lo importante/i,
+    /^Aquí tendría sentido/i,
+    /^Aquí lo más útil/i,
+    /^Si hoy el problema está/i,
+    /^Si el reto está/i,
+    /^Si el cuello de botella está/i,
+    /^Si el problema está/i
+  ];
+
+  for (const pattern of patterns) {
+    if (pattern.test(clean)) {
+      return bold(clean);
+    }
+  }
+
+  return clean;
+}
+
 function buildHybridReply(aiReply, withCTA = false) {
-  const cleanReply = String(aiReply || "").trim();
+  let cleanReply = String(aiReply || "").trim();
+
+  cleanReply = highlightBrand(cleanReply);
+
+  cleanReply = cleanReply
+    .split("\n\n")
+    .map((p) => highlightDecisionLead(p))
+    .join("\n\n");
 
   if (withCTA) {
     return `${cleanReply}
@@ -307,47 +355,47 @@ function buildCaseStrategy(user) {
 function buildExplorationQuestion(user) {
   if (user.automatizacion_rama === "atencion_ventas") {
     if (user.automatizacion_objetivo === "calificar_leads_agendar") {
-      return "Para aterrizarlo mejor, dime algo puntual: hoy te duele más conseguir más leads, filtrar mejor a los prospectos o lograr que más conversaciones terminen en reunión?";
+      return bold("Para aterrizarlo mejor, dime algo puntual: hoy te duele más conseguir más leads, filtrar mejor a los prospectos o lograr que más conversaciones terminen en reunión?");
     }
 
     if (user.automatizacion_objetivo === "faq_soporte") {
-      return "Para afinar la solución, dime qué te afecta más hoy: tiempos de respuesta, carga del equipo o inconsistencia en las respuestas?";
+      return bold("Para afinar la solución, dime qué te afecta más hoy: tiempos de respuesta, carga del equipo o inconsistencia en las respuestas?");
     }
 
     if (user.automatizacion_objetivo === "pedidos_pagos") {
-      return "Para aterrizar mejor la recomendación, dime qué te frena más hoy: tomar pedidos, validar pagos o evitar errores en el proceso?";
+      return bold("Para aterrizar mejor la recomendación, dime qué te frena más hoy: tomar pedidos, validar pagos o evitar errores en el proceso?");
     }
   }
 
   if (user.automatizacion_rama === "procesos_internos") {
     if (user.automatizacion_objetivo === "notificaciones_seguimiento") {
-      return "Para afinar la solución, dime qué te afecta más hoy: seguimiento tardío, tareas repetitivas o falta de orden entre áreas?";
+      return bold("Para afinar la solución, dime qué te afecta más hoy: seguimiento tardío, tareas repetitivas o falta de orden entre áreas?");
     }
 
     if (user.automatizacion_objetivo === "procesamiento_datos") {
-      return "Para aterrizar bien esto, dime dónde aparece hoy el mayor problema: en la captura de datos, en la validación o en el procesamiento posterior?";
+      return bold("Para aterrizar bien esto, dime dónde aparece hoy el mayor problema: en la captura de datos, en la validación o en el procesamiento posterior?");
     }
 
     if (user.automatizacion_objetivo === "sincronizacion_bases") {
-      return "Para orientarte mejor, dime qué te afecta más hoy: datos desactualizados, duplicidad de información o sistemas que no se comunican bien?";
+      return bold("Para orientarte mejor, dime qué te afecta más hoy: datos desactualizados, duplicidad de información o sistemas que no se comunican bien?");
     }
   }
 
   if (user.automatizacion_rama === "agentes_especializados") {
     if (user.automatizacion_objetivo === "base_conocimiento") {
-      return "Para aterrizar mejor la solución, dime qué te interesa más hoy: centralizar conocimiento, responder más rápido o mejorar soporte interno?";
+      return bold("Para aterrizar mejor la solución, dime qué te interesa más hoy: centralizar conocimiento, responder más rápido o mejorar soporte interno?");
     }
 
     if (user.automatizacion_objetivo === "asistente_autonomo") {
-      return "Para orientarte mejor, dime qué quieres que ese agente haga en la práctica: responder consultas, ejecutar tareas o apoyar decisiones operativas?";
+      return bold("Para orientarte mejor, dime qué quieres que ese agente haga en la práctica: responder consultas, ejecutar tareas o apoyar decisiones operativas?");
     }
 
     if (user.automatizacion_objetivo === "reduccion_costos") {
-      return "Para afinar la recomendación, dime dónde ves hoy el mayor desperdicio: tiempo del equipo, tareas repetitivas o errores operativos?";
+      return bold("Para afinar la recomendación, dime dónde ves hoy el mayor desperdicio: tiempo del equipo, tareas repetitivas o errores operativos?");
     }
   }
 
-  return "Para orientarte mejor, dime qué necesitas resolver primero en tu operación actual?";
+  return bold("Para orientarte mejor, dime qué necesitas resolver primero en tu operación actual?");
 }
 
 function buildConcreteResponseQuestion(user, userMessage = "") {
@@ -459,36 +507,34 @@ function buildSecondTurnAnchor(userMessage = "") {
   const clean = String(userMessage || "").trim().toLowerCase();
 
   if (!clean) {
-    return `${getRandomOpener()} bajar esto a una decisión práctica para que la automatización realmente impacte tu operación.`;
+    return highlightDecisionLead(`${getRandomOpener()} bajar esto a una decisión práctica para que la automatización realmente impacte tu operación.`);
   }
 
-  // CASOS MÁS COMUNES (más naturales y comerciales)
   if (clean.includes("lead")) {
-    return "Si hoy el problema está en generar más leads, ahí no conviene automatizar a ciegas, sino ajustar primero la captación y la calidad de entrada para que la automatización tenga sentido.";
+    return highlightDecisionLead("Si hoy el problema está en generar más leads, ahí no conviene automatizar a ciegas, sino ajustar primero la captación y la calidad de entrada para que la automatización tenga sentido.");
   }
 
   if (clean.includes("filtrar") || clean.includes("calific")) {
-    return "Si el reto está en filtrar mejor los prospectos, entonces la clave no es responder más rápido, sino definir bien criterios de calificación y automatizar ese filtro desde el inicio.";
+    return highlightDecisionLead("Si el reto está en filtrar mejor los prospectos, entonces la clave no es responder más rápido, sino definir bien criterios de calificación y automatizar ese filtro desde el inicio.");
   }
 
   if (clean.includes("reunion") || clean.includes("reunión")) {
-    return "Si el cuello de botella está en convertir conversaciones en reuniones, entonces hay que trabajar la transición entre interés y agenda, no solo la respuesta inicial.";
+    return highlightDecisionLead("Si el cuello de botella está en convertir conversaciones en reuniones, entonces hay que trabajar la transición entre interés y agenda, no solo la respuesta inicial.");
   }
 
   if (clean.includes("ventas") || clean.includes("cerrar")) {
-    return "Si el problema está en cerrar ventas, la automatización debe enfocarse en el seguimiento y en mantener vivo el interés, no solo en la primera interacción.";
+    return highlightDecisionLead("Si el problema está en cerrar ventas, la automatización debe enfocarse en el seguimiento y en mantener vivo el interés, no solo en la primera interacción.");
   }
 
   if (clean.includes("soporte") || clean.includes("responder")) {
-    return "Si el reto está en soporte o respuestas, entonces conviene estructurar bien la base de conocimiento antes de automatizar para evitar respuestas vacías o inconsistentes.";
+    return highlightDecisionLead("Si el reto está en soporte o respuestas, entonces conviene estructurar bien la base de conocimiento antes de automatizar para evitar respuestas vacías o inconsistentes.");
   }
 
   if (clean.includes("datos")) {
-    return "Si el problema está en el manejo de datos, entonces lo importante es ordenar la entrada, validación y uso de esa información antes de pensar en automatizar todo el flujo.";
+    return highlightDecisionLead("Si el problema está en el manejo de datos, entonces lo importante es ordenar la entrada, validación y uso de esa información antes de pensar en automatizar todo el flujo.");
   }
 
-  // DEFAULT (mucho más natural que antes)
-  return `${getRandomOpener()} atacar ese punto específico para que realmente tenga impacto en tu operación.`;
+  return highlightDecisionLead(`${getRandomOpener()} atacar ese punto específico para que realmente tenga impacto en tu operación.`);
 }
 
 function buildImplementationMiniPlan(user) {
@@ -502,7 +548,8 @@ function buildImplementationMiniPlan(user) {
     }
 
     if (user.automatizacion_objetivo === "pedidos_pagos") {
-      return `${getRandomOpener()} ordenar el flujo comercial, validar datos, confirmar pagos y reducir fricción entre consulta, pedido y cierre.`; }
+      return `${getRandomOpener()} ordenar el flujo comercial, validar datos, confirmar pagos y reducir fricción entre consulta, pedido y cierre.`;
+    }
   }
 
   if (user.automatizacion_rama === "procesos_internos") {
@@ -546,64 +593,65 @@ ${strategy}
 
 ${question}`;
 }
+
 function buildSecondTurnImplementationDetail(user, userMessage = "") {
   const msg = String(userMessage || "").trim().toLowerCase();
 
   if (user.automatizacion_rama === "atencion_ventas") {
     if (user.automatizacion_objetivo === "calificar_leads_agendar") {
       if (msg.includes("lead")) {
-        return "Aquí lo importante sería mejorar la captación y el filtro de entrada para que la automatización trabaje con oportunidades más reales.";
+        return highlightDecisionLead("Aquí lo importante sería mejorar la captación y el filtro de entrada para que la automatización trabaje con oportunidades más reales.");
       }
 
       if (msg.includes("filtrar") || msg.includes("calific")) {
-        return `${getRandomOpener()} definir mejor criterios de calificación y automatizar ese filtro desde el inicio para separar mejor a los prospectos antes de agenda o seguimiento.`;
+        return highlightDecisionLead(`${getRandomOpener()} definir mejor criterios de calificación y automatizar ese filtro desde el inicio para separar mejor a los prospectos antes de agenda o seguimiento.`);
       }
 
       if (msg.includes("reunion") || msg.includes("reunión")) {
-        return "Aquí lo más útil sería ordenar mejor la transición entre interés y agenda para reducir fricción y aumentar conversión.";
+        return highlightDecisionLead("Aquí lo más útil sería ordenar mejor la transición entre interés y agenda para reducir fricción y aumentar conversión.");
       }
 
-      return "Aquí conviene identificar con precisión dónde se enfría hoy la conversación comercial para automatizar ese tramo con más sentido.";
+      return highlightDecisionLead("Aquí conviene identificar con precisión dónde se enfría hoy la conversación comercial para automatizar ese tramo con más sentido.");
     }
 
     if (user.automatizacion_objetivo === "faq_soporte") {
-      return "Aquí tendría sentido ordenar respuestas frecuentes y criterios de escalamiento para dar una atención más consistente sin cargar tanto al equipo.";
+      return highlightDecisionLead("Aquí tendría sentido ordenar respuestas frecuentes y criterios de escalamiento para dar una atención más consistente sin cargar tanto al equipo.");
     }
 
     if (user.automatizacion_objetivo === "pedidos_pagos") {
-      return "Aquí lo importante sería reducir fricción entre consulta, validación y cierre para que el flujo comercial avance con más orden.";
+      return highlightDecisionLead("Aquí lo importante sería reducir fricción entre consulta, validación y cierre para que el flujo comercial avance con más orden.");
     }
   }
 
   if (user.automatizacion_rama === "procesos_internos") {
     if (user.automatizacion_objetivo === "procesamiento_datos") {
-      return "Aquí el valor real estaría en ordenar validaciones, reducir errores y definir un flujo claro para procesar mejor la información.";
+      return highlightDecisionLead("Aquí el valor real estaría en ordenar validaciones, reducir errores y definir un flujo claro para procesar mejor la información.");
     }
 
     if (user.automatizacion_objetivo === "notificaciones_seguimiento") {
-      return "Aquí conviene automatizar alertas y seguimientos en los puntos donde hoy más se pierde tiempo o continuidad.";
+      return highlightDecisionLead("Aquí conviene automatizar alertas y seguimientos en los puntos donde hoy más se pierde tiempo o continuidad.");
     }
 
     if (user.automatizacion_objetivo === "sincronizacion_bases") {
-      return "Aquí el punto clave sería alinear fuentes y mantener la información actualizada sin intervención manual constante.";
+      return highlightDecisionLead("Aquí el punto clave sería alinear fuentes y mantener la información actualizada sin intervención manual constante.");
     }
   }
 
   if (user.automatizacion_rama === "agentes_especializados") {
     if (user.automatizacion_objetivo === "base_conocimiento") {
-      return "Aquí tendría sentido organizar mejor las fuentes y entrenar el agente sobre información realmente útil para la operación.";
+      return highlightDecisionLead("Aquí tendría sentido organizar mejor las fuentes y entrenar el agente sobre información realmente útil para la operación.");
     }
 
     if (user.automatizacion_objetivo === "asistente_autonomo") {
-      return "Aquí lo importante sería definir límites, permisos y tareas concretas para que el agente aporte valor real.";
+      return highlightDecisionLead("Aquí lo importante sería definir límites, permisos y tareas concretas para que el agente aporte valor real.");
     }
 
     if (user.automatizacion_objetivo === "reduccion_costos") {
-      return "Aquí el foco debería estar en detectar desperdicios operativos y automatizar solo lo que realmente mejora eficiencia.";
+      return highlightDecisionLead("Aquí el foco debería estar en detectar desperdicios operativos y automatizar solo lo que realmente mejora eficiencia.");
     }
   }
 
-  return "Aquí conviene aterrizar mejor ese punto para que la automatización resuelva algo real y no se quede en una mejora superficial.";
+  return highlightDecisionLead("Aquí conviene aterrizar mejor ese punto para que la automatización resuelva algo real y no se quede en una mejora superficial.");
 }
 
 function buildStrongSecondTurnFallback(user, userMessage) {
@@ -649,21 +697,29 @@ function ensureFirstTurnHasConsultiveDepth(text = "", user) {
   let clean = sanitizeHybridText(text);
 
   const needsReinforcement =
-    countWords(clean) < 34 ||
-    (
-      countParagraphs(clean) < 1 &&
-      !containsAnyKeyword(clean, ["oneorbix", "implementar", "implementación", "flujo", "proceso", "automatizar", "agenda", "seguimiento", "operacion", "operación"])
-    ) ||
-    !containsAnyKeyword(clean, ["conviene", "clave", "importante", "priorizar", "ordenar", "mejorar", "oneorbix"]);
+    countWords(clean) < 50 ||
+    countParagraphs(clean) < 2 ||
+    !containsAnyKeyword(clean, [
+      "oneorbix",
+      "implementar",
+      "implementación",
+      "flujo",
+      "proceso",
+      "automatizar",
+      "agenda",
+      "seguimiento",
+      "operacion",
+      "operación",
+      "datos",
+      "ventas",
+      "automatización"
+    ]);
 
   if (needsReinforcement) {
     clean = buildStrongFirstTurnFallback(user);
   }
 
-  if (countParagraphs(clean) >= 2) {
-    clean = ensureTwoParagraphStructure(clean);
-  }
-
+  clean = ensureTwoParagraphStructure(clean);
   clean = ensureFirstTurnHasQuestion(clean, user);
 
   return clean.trim();
@@ -681,21 +737,30 @@ function ensureSecondTurnHasSubstance(text = "", user, userMessage = "") {
   let clean = sanitizeHybridText(text);
 
   const needsReinforcement =
-    countWords(clean) < 30 ||
-    (
-      countParagraphs(clean) < 1 &&
-      !containsAnyKeyword(clean, ["oneorbix", "implementar", "implementación", "flujo", "reglas", "proceso", "automatizar", "herramientas", "operación", "operativa"])
-    ) ||
-    !containsAnyKeyword(clean, ["conviene", "clave", "importante", "priorizar", "ordenar", "mejorar", "oneorbix"]);
+    countWords(clean) < 42 ||
+    countParagraphs(clean) < 2 ||
+    !containsAnyKeyword(clean, [
+      "oneorbix",
+      "implementar",
+      "implementación",
+      "flujo",
+      "reglas",
+      "proceso",
+      "automatizar",
+      "herramientas",
+      "operación",
+      "operativa",
+      "datos",
+      "ventas",
+      "automatización",
+      "criterio"
+    ]);
 
   if (needsReinforcement) {
     clean = buildStrongSecondTurnFallback(user, userMessage);
   }
 
-  if (countParagraphs(clean) >= 2) {
-    clean = ensureTwoParagraphStructure(clean);
-  }
-
+  clean = ensureTwoParagraphStructure(clean);
   clean = ensureSecondTurnNoRepeatedQuestion(clean);
 
   return clean.trim();
@@ -709,7 +774,7 @@ function maybeReinforceSecondTurnBeforeCTA(text = "", user, userMessage = "") {
   }
 
   if (
-    countWords(clean) < 26 ||
+    countWords(clean) < 48 ||
     !containsAnyKeyword(clean, ["conviene", "clave", "importante", "ordenar", "mejorar"])
   ) {
     clean = buildStrongSecondTurnFallback(user, userMessage);
@@ -717,14 +782,14 @@ function maybeReinforceSecondTurnBeforeCTA(text = "", user, userMessage = "") {
 
   return clean.trim();
 }
+
 // ========================================================
 // FALLBACKS
 // ========================================================
 function buildFallbackInitialReply(user) {
-  const implementationFocus = buildImplementationFocus(user);
   const strategy = buildCaseStrategy(user);
 
-  return `En tu caso, lo más lógico sería trabajar una solución enfocada en ${implementationFocus}, para que la automatización no solo quite carga manual, sino que también mejore control, velocidad y consistencia operativa.
+  return `En tu caso, la oportunidad real no está solo en responder más rápido, sino en estructurar una automatización que mejore control, velocidad y conversión sin añadir más carga manual al equipo.
 
 ${strategy}`;
 }
@@ -818,12 +883,12 @@ INSTRUCCIONES
 - Evita respuestas de una sola idea o una sola frase corta.
 - No repitas la misma idea con palabras distintas.
 - Prioriza una respuesta más corta pero más útil.
+- Escribe entre 2 y 3 párrafos cortos.
 ${turnInstruction}
 ${closingInstruction}
-- Escribe en 1 o 2 párrafos breves.
-- Idealmente entre 4 y 6 líneas.
   `.trim();
 }
+
 // ========================================================
 // RESOLVERS HÍBRIDOS
 // ========================================================
@@ -1188,6 +1253,7 @@ async function handleAutomatizacionFlow({
         source: "backend"
       };
     }
+
     // =====================================================
     // RAMA 2 — PROCESOS INTERNOS
     // =====================================================
@@ -1332,11 +1398,6 @@ async function handleAutomatizacionFlow({
       }
 
       user.automatizacion_alcance = alcance;
-
-      // LÓGICA NUEVA:
-      // La salida híbrida que viene ahora será el PRIMER TURNO IA.
-      // El siguiente mensaje del usuario debe disparar ya el
-      // SEGUNDO TURNO IA + CTA.
       user.automatizacion_ai_turns = 1;
       user.automatizacion_cta_enabled = false;
       user.automatizacion_last_user_reply = null;
@@ -1434,10 +1495,6 @@ ${phone}
       user.automatizacion_ai_turns += 1;
       user.automatizacion_last_user_reply = rawMessage;
 
-      // LÓGICA NUEVA:
-      // Como el primer turno IA ya se entregó al salir de alcance_p4,
-      // este siguiente mensaje del usuario debe activar directamente
-      // el SEGUNDO TURNO IA + CTA.
       const mustShowCTA = user.automatizacion_ai_turns >= 2;
 
       if (mustShowCTA) {
