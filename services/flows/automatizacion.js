@@ -488,7 +488,7 @@ function buildSecondTurnAnchor(userMessage = "") {
   }
 
   // DEFAULT (mucho más natural que antes)
-  rreturn `${getRandomOpener()} atacar ese punto específico para que realmente tenga impacto en tu operación.`;
+  return `${getRandomOpener()} atacar ese punto específico para que realmente tenga impacto en tu operación.`;
 }
 
 function buildImplementationMiniPlan(user) {
