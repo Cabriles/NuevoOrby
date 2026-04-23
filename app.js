@@ -416,27 +416,48 @@ function trackBusinessMetrics({
     });
   }
 
-  const strongIntentState = enteredCtaState;
-    
+  const strongIntentState =
+  enteredCtaState ||
+  String(toState || "").includes("reunion") ||
+  String(toState || "").includes("horario") ||
+  String(toState || "").includes("confirmar_numero");
+  const inferredAction = inferCtaName(toState || fromState, message);
 
-  if (strongIntentState && !userAfter.alert_sent) {
-    userAfter.alert_sent = true;
-    saveUser(phone, userAfter);
+const alertFingerprint = [
+  module || "sin_modulo",
+  phone || "sin_phone",
+  inferredAction || "sin_action"
+].join("|");  
 
-    safeLogLeadEvent({
-      type: "conversion_intent",
-      phone,
-      name: leadName,
-      module,
-      action: inferCtaName(toState || fromState, message),
-      estado: toState,
-      score,
-      lead_type: leadType,
-      source
-    });
+if (strongIntentState) {
+  const currentUser = getOrCreateUser(phone);
+
+  // BLOQUEO POR DATOS INCOMPLETOS
+  if (!module || !phone || !inferredAction) {
+    return;
   }
-}
 
+  // BLOQUEO POR DUPLICADO REAL
+  if (currentUser.last_owner_alert_fingerprint === alertFingerprint) {
+    return;
+  }
+
+  // GUARDAR HUELLA
+  currentUser.last_owner_alert_fingerprint = alertFingerprint;
+  saveUser(phone, currentUser);
+
+  safeLogLeadEvent({
+    type: "conversion_intent",
+    phone,
+    name: leadName,
+    module,
+    action: inferredAction,
+    estado: toState,
+    score,
+    lead_type: leadType,
+    source
+  });
+}
 // ========================================================
 // DISPATCH A FLOWS
 // ========================================================
