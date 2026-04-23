@@ -422,16 +422,37 @@ function trackBusinessMetrics({
     String(toState || "").includes("callback") ||
     (toState === "finalizado" && isCtaState(fromState));
 
-  if (strongIntentState && !userAfter.alert_sent) {
-    userAfter.alert_sent = true;
-    saveUser(phone, userAfter);
+  if (strongIntentState) {
+    const currentUser = getOrCreateUser(phone);
+
+    if (!currentUser) return;
+
+    const inferredAction = inferCtaName(toState || fromState, message);
+
+    if (!module || !phone || !inferredAction || inferredAction === "general") {
+      return;
+    }
+
+    const alertFingerprint = [
+      module,
+      phone,
+      inferredAction
+    ].join("|");
+
+    if (currentUser.last_owner_alert_fingerprint === alertFingerprint) {
+      return;
+    }
+
+    currentUser.last_owner_alert_fingerprint = alertFingerprint;
+    currentUser.alert_sent = true;
+    saveUser(phone, currentUser);
 
     safeLogLeadEvent({
       type: "conversion_intent",
       phone,
       name: leadName,
       module,
-      action: inferCtaName(toState || fromState, message),
+      action: inferredAction,
       estado: toState,
       score,
       lead_type: leadType,
