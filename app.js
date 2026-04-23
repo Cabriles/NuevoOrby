@@ -1,4 +1,3 @@
-
 const { getMainMenu } = require("./services/menu");
 const {
   resolveModuleEntry
@@ -345,6 +344,15 @@ function isCtaState(state = "") {
   return ctaFragments.some((fragment) => value.includes(fragment));
 }
 
+function isPrimaryCtaSelectionState(state = "") {
+  const value = String(state || "");
+
+  return (
+    value.endsWith("_reunion") ||
+    value.endsWith("_asesor_confirmar_numero")
+  );
+}
+
 function inferCtaName(state = "", message = "") {
   const normalizedState = String(state || "");
   const normalizedMessage = normalizeText(message);
@@ -364,6 +372,31 @@ function inferCtaName(state = "", message = "") {
   if (normalizedMessage.includes("whatsapp")) return "whatsapp";
 
   return "general";
+}
+
+function inferEventVia({
+  type = "",
+  fromState = "",
+  toState = "",
+  message = "",
+  userBefore = {},
+  userAfter = {}
+}) {
+  if (type === "qualified") {
+    return "lead_qualified";
+  }
+
+  if (type === "cta_click" || type === "conversion_intent") {
+    const cta = inferCtaName(toState || fromState, message);
+
+    if (cta === "whatsapp") return "cta_whatsapp";
+    if (cta === "reunion") return "cta_reunion";
+
+    return "cta_general";
+  }
+
+  const sourceUser = userAfter?.via ? userAfter : userBefore;
+  return sourceUser?.via || "";
 }
 
 function trackBusinessMetrics({
@@ -394,15 +427,23 @@ function trackBusinessMetrics({
       estado: toState,
       score,
       lead_type: leadType,
+      via: inferEventVia({
+        type: "qualified",
+        fromState,
+        toState,
+        message,
+        userBefore,
+        userAfter
+      }),
       source
     });
   }
 
-  const enteredCtaState =
-    !isCtaState(fromState) &&
-    isCtaState(toState);
+  const enteredPrimaryCtaSelection =
+    !isPrimaryCtaSelectionState(fromState) &&
+    isPrimaryCtaSelectionState(toState);
 
-  if (enteredCtaState) {
+  if (enteredPrimaryCtaSelection) {
     safeLogLeadEvent({
       type: "cta_click",
       phone,
@@ -412,58 +453,79 @@ function trackBusinessMetrics({
       estado: toState,
       score,
       lead_type: leadType,
+      via: inferEventVia({
+        type: "cta_click",
+        fromState,
+        toState,
+        message,
+        userBefore,
+        userAfter
+      }),
       source
     });
   }
 
   const strongIntentState =
-  enteredCtaState ||
-  String(toState || "").includes("reunion") ||
-  String(toState || "").includes("horario") ||
-  String(toState || "").includes("confirmar_numero");
+    enteredPrimaryCtaSelection ||
+    (
+      !isCtaState(fromState) &&
+      (
+        String(toState || "").includes("reunion") ||
+        String(toState || "").includes("confirmar_numero")
+      )
+    );
+
   const inferredAction = inferCtaName(toState || fromState, message);
 
-const alertFingerprint = [
-  module || "sin_modulo",
-  phone || "sin_phone",
-  inferredAction || "sin_action"
-].join("|");  
+  const alertFingerprint = [
+    module || "sin_modulo",
+    phone || "sin_phone"
+  ].join("|");
 
-if (strongIntentState) {
-  const currentUser = getOrCreateUser(phone);
+  if (strongIntentState) {
+    const currentUser = getOrCreateUser(phone);
 
-  // BLOQUEO POR DATOS INCOMPLETOS
-  if (!module || !phone || !inferredAction) {
-  console.log("⚠️ Evento bloqueado por datos incompletos", {
-    module,
-    phone,
-    inferredAction
-  });
-  return;
-}
+    // BLOQUEO POR DATOS INCOMPLETOS
+    if (!module || !phone || !inferredAction || inferredAction === "general") {
+      console.log("⚠️ Evento bloqueado por datos incompletos", {
+        module,
+        phone,
+        inferredAction
+      });
+      return;
+    }
 
-  // BLOQUEO POR DUPLICADO REAL
-  if (currentUser.last_owner_alert_fingerprint === alertFingerprint) {
-    return;
+    // BLOQUEO POR DUPLICADO REAL
+    if (currentUser.last_owner_alert_fingerprint === alertFingerprint) {
+      return;
+    }
+
+    // GUARDAR HUELLA
+    currentUser.last_owner_alert_fingerprint = alertFingerprint;
+    saveUser(phone, currentUser);
+
+    safeLogLeadEvent({
+      type: "conversion_intent",
+      phone,
+      name: leadName,
+      module,
+      action: inferredAction,
+      estado: toState,
+      score,
+      lead_type: leadType,
+      via: inferEventVia({
+        type: "conversion_intent",
+        fromState,
+        toState,
+        message,
+        userBefore,
+        userAfter
+      }),
+      source
+    });
   }
-
-  // GUARDAR HUELLA
-  currentUser.last_owner_alert_fingerprint = alertFingerprint;
-  saveUser(phone, currentUser);
-
-  safeLogLeadEvent({
-    type: "conversion_intent",
-    phone,
-    name: leadName,
-    module,
-    action: inferredAction,
-    estado: toState,
-    score,
-    lead_type: leadType,
-    source
-  });
 }
-}
+
 // ========================================================
 // DISPATCH A FLOWS
 // ========================================================
