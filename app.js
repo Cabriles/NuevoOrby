@@ -439,7 +439,11 @@ function trackBusinessMetrics({
     });
   }
 
-  const alreadyClickedCTA =
+  const enteredPrimaryCtaSelection =
+  !isPrimaryCtaSelectionState(fromState) &&
+  isPrimaryCtaSelectionState(toState);
+
+const alreadyClickedCTA =
   userAfter?.cta_click_registered === true;
 
 if (enteredPrimaryCtaSelection && !alreadyClickedCTA) {
