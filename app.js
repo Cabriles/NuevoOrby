@@ -187,6 +187,19 @@ En pocos segundos puedo orientarte y mostrarte qué tipo de solución encaja mej
 3️⃣ Crear un agente de IA especializado`;
 }
 
+function buildMetaAmazonWelcomeMessage() {
+  return `Hola 👋 Soy Orby, el asistente de OneOrbix.
+
+Veo que estás interesado en vender en Amazon o iniciar un proyecto Amazon FBA.
+
+Para orientarte rápido, dime en qué punto estás:
+
+1️⃣ Ya tengo un producto para vender
+2️⃣ Aún no sé qué producto vender
+3️⃣ Quiero empezar desde cero
+4️⃣ Ver planes de acompañamiento`;
+}
+
 function buildUnknownMessage() {
   return `No logré identificar bien tu mensaje.
 
@@ -239,6 +252,7 @@ function detectDirectCampaignModule(rawMessage = "") {
 
   const directTriggers = {
     amazon: [
+      "orby_meta_amazon",
       "amazon",
       "amazon fba",
       "vender en amazon",
@@ -546,7 +560,6 @@ function trackBusinessMetrics({
     });
   }
 }
-
 // ========================================================
 // DISPATCH A FLOWS
 // ========================================================
@@ -671,14 +684,21 @@ function handleModuleEntry({ user, phone, rawMessage }) {
     user.interes_principal = directModule === "club" ? "atencion" : directModule;
     const updatedUser = saveUser(phone, user);
 
+    const normalizedRawMessage = normalizeText(rawMessage);
+
     const isMetaAutomatizacionEntry =
-      normalizeText(rawMessage).includes("orby_meta_automatizacion");
+      normalizedRawMessage.includes("orby_meta_automatizacion");
+
+    const isMetaAmazonEntry =
+      normalizedRawMessage.includes("orby_meta_amazon");
 
     const entryVia = isMetaAutomatizacionEntry
       ? "meta_campaign_automatizacion"
-      : "direct_trigger";
+      : isMetaAmazonEntry
+        ? "meta_campaign_amazon"
+        : "direct_trigger";
 
-    const matchedIntent = isMetaAutomatizacionEntry
+    const matchedIntent = isMetaAutomatizacionEntry || isMetaAmazonEntry
       ? "meta_campaign_entry"
       : "direct_campaign_entry";
 
@@ -695,7 +715,9 @@ function handleModuleEntry({ user, phone, rawMessage }) {
     return buildResponseWithNavigation(
       isMetaAutomatizacionEntry
         ? buildMetaAutomatizacionWelcomeMessage()
-        : getModuleIntroByKey(directModule === "club" ? "atencion" : directModule),
+        : isMetaAmazonEntry
+          ? buildMetaAmazonWelcomeMessage()
+          : getModuleIntroByKey(directModule === "club" ? "atencion" : directModule),
       {
         source: "backend",
         matched_module: directModule,
