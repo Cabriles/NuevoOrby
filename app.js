@@ -173,6 +173,20 @@ Estoy aquí para orientarte de forma rápida y clara.
 ${buildWelcomeMenu()}`;
 }
 
+function buildMetaAutomatizacionWelcomeMessage() {
+  return `Hola 👋 Soy Orby, el asistente de OneOrbix.
+
+Veo que estás interesado en automatizar la atención o ventas de tu negocio con IA.
+
+En pocos segundos puedo orientarte y mostrarte qué tipo de solución encaja mejor con tu caso.
+
+¿Qué necesitas automatizar primero?
+
+1️⃣ Atención al cliente y ventas por WhatsApp
+2️⃣ Procesos internos de tu negocio
+3️⃣ Crear un agente de IA especializado`;
+}
+
 function buildUnknownMessage() {
   return `No logré identificar bien tu mensaje.
 
@@ -250,6 +264,7 @@ function detectDirectCampaignModule(rawMessage = "") {
     ],
 
     automatizacion: [
+      "orby_meta_automatizacion",
       "automatizar",
       "automatizar negocio",
       "automatizar mi negocio",
@@ -440,36 +455,37 @@ function trackBusinessMetrics({
   }
 
   const enteredPrimaryCtaSelection =
-  !isPrimaryCtaSelectionState(fromState) &&
-  isPrimaryCtaSelectionState(toState);
+    !isPrimaryCtaSelectionState(fromState) &&
+    isPrimaryCtaSelectionState(toState);
 
-const alreadyClickedCTA =
-  userAfter?.cta_click_registered === true;
+  const alreadyClickedCTA =
+    userAfter?.cta_click_registered === true;
 
-if (enteredPrimaryCtaSelection && !alreadyClickedCTA) {
-  userAfter.cta_click_registered = true;
-  saveUser(phone, userAfter);
+  if (enteredPrimaryCtaSelection && !alreadyClickedCTA) {
+    userAfter.cta_click_registered = true;
+    saveUser(phone, userAfter);
 
-  safeLogLeadEvent({
-    type: "cta_click",
-    phone,
-    name: leadName,
-    module,
-    cta: inferCtaName(toState, message),
-    estado: toState,
-    score,
-    lead_type: leadType,
-    via: inferEventVia({
+    safeLogLeadEvent({
       type: "cta_click",
-      fromState,
-      toState,
-      message,
-      userBefore,
-      userAfter
-    }),
-    source
-  });
-}
+      phone,
+      name: leadName,
+      module,
+      cta: inferCtaName(toState, message),
+      estado: toState,
+      score,
+      lead_type: leadType,
+      via: inferEventVia({
+        type: "cta_click",
+        fromState,
+        toState,
+        message,
+        userBefore,
+        userAfter
+      }),
+      source
+    });
+  }
+
   const strongIntentState =
     enteredPrimaryCtaSelection ||
     (
@@ -655,23 +671,36 @@ function handleModuleEntry({ user, phone, rawMessage }) {
     user.interes_principal = directModule === "club" ? "atencion" : directModule;
     const updatedUser = saveUser(phone, user);
 
+    const isMetaAutomatizacionEntry =
+      normalizeText(rawMessage).includes("orby_meta_automatizacion");
+
+    const entryVia = isMetaAutomatizacionEntry
+      ? "meta_campaign_automatizacion"
+      : "direct_trigger";
+
+    const matchedIntent = isMetaAutomatizacionEntry
+      ? "meta_campaign_entry"
+      : "direct_campaign_entry";
+
     safeLogLeadEvent({
       type: "entry",
       phone,
       name: leadName,
       module: directModule === "club" ? "atencion" : directModule,
-      via: "direct_trigger",
+      via: entryVia,
       estado: updatedUser?.estado || initialState,
       source: "backend"
     });
 
     return buildResponseWithNavigation(
-      getModuleIntroByKey(directModule === "club" ? "atencion" : directModule),
+      isMetaAutomatizacionEntry
+        ? buildMetaAutomatizacionWelcomeMessage()
+        : getModuleIntroByKey(directModule === "club" ? "atencion" : directModule),
       {
         source: "backend",
         matched_module: directModule,
-        matched_intent: "direct_campaign_entry",
-        via: "direct_trigger"
+        matched_intent: matchedIntent,
+        via: entryVia
       },
       initialState
     );
