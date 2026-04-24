@@ -341,6 +341,12 @@ async function sendOwnerLeadAlert(payload = {}) {
       return;
     }
 
+    console.log("🚨 [OWNER_ALERT] Intentando enviar alerta...");
+console.log("[OWNER_ALERT] Payload:", JSON.stringify(payload));
+console.log("[OWNER_ALERT] OWNER_ALERT_PHONE:", OWNER_ALERT_PHONE ? "SI" : "NO");
+console.log("[OWNER_ALERT] WHATSAPP_TOKEN:", WHATSAPP_TOKEN ? "SI" : "NO");
+console.log("[OWNER_ALERT] WHATSAPP_PHONE_NUMBER_ID:", WHATSAPP_PHONE_NUMBER_ID ? "SI" : "NO");
+
     if (!OWNER_ALERT_PHONE || !WHATSAPP_TOKEN || !WHATSAPP_PHONE_NUMBER_ID) {
       console.error("[LOGGER_ERROR] Faltan variables para alerta al owner.");
       return;
@@ -378,8 +384,13 @@ Escríbele ahora: https://wa.me/${phone}`;
       }
     );
 
+    const responseText = await response.text().catch(() => "");
+
+console.log("[OWNER_ALERT] Status Meta:", response.status);
+console.log("[OWNER_ALERT] Response Meta:", responseText);
+
     if (!response.ok) {
-      const errorText = await response.text().catch(() => "");
+      const errorText = responseText;
       console.error(
         ...buildSafeConsoleErrorParts(
           "[LOGGER_ERROR] No se pudo enviar alerta al owner:",
