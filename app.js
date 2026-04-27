@@ -686,8 +686,9 @@ function handleModuleEntry({ user, phone, rawMessage }) {
 
     const normalizedRawMessage = normalizeText(rawMessage);
 
-    const isMetaAutomatizacionEntry =
-      normalizedRawMessage.includes("orby_meta_automatizacion");
+const isMetaAutomatizacionEntry =
+  normalizedRawMessage.includes("orby_meta_automatizacion") ||
+  normalizedRawMessage.includes("quiero automatizar mi negocio con ia");
 
     const isMetaAmazonEntry =
       normalizedRawMessage.includes("orby_meta_amazon");
